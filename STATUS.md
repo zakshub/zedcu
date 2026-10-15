@@ -14,6 +14,8 @@ The planning baseline and 15 agent profiles remain on `main`. Implementation is 
 
 - Strict TypeScript project configuration and npm scripts.
 - Provider adapter contracts and normalized failure categories.
+- Pluggable gateway registry and route-level gateway identity, separated from upstream provider/model identity.
+- Gateway-neutral strategy document that treats OmniRoute, OpenRouter, direct providers, and additional compatible gateways as independently evaluated options.
 - Free-route policy that rejects paid/unknown routes and requires explicit zero-cost pricing evidence checked within 30 days.
 - Bounded alternate-route attempts with per-run attempt records, retryable-failure handling, duplicate-route prevention, and a safe pause when no eligible route remains.
 - Task state machine and service for creation, guarded transitions, checkpoints, and ordered audit events.
@@ -42,7 +44,7 @@ The planning baseline and 15 agent profiles remain on `main`. Implementation is 
 
 ## Next actions
 
-1. Confirm CI on the latest branch commit.
+1. Confirm CI on the latest branch commit, including gateway registry tests.
 2. Generate and commit a lockfile from a clean Node 22 environment.
 3. Select persistence and queue services only after validating current free-tier limits and reliability.
 4. Implement worker leases, idempotency, cancellation, and verified checkpoint recovery.
