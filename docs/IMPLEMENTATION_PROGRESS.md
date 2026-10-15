@@ -2,7 +2,7 @@
 
 Updated: 2026-10-15
 
-Latest CI verification: workflow run #95 passed typecheck, tests, build, and lint after the gateway-registry change.
+Latest CI verification: workflow run #115 passed typecheck, tests, build, and lint after the capability-aware dynamic routing changes.
 
 ## Implemented in this branch (CI status must be checked on the latest commit)
 
