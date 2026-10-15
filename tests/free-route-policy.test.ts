@@ -38,6 +38,41 @@ describe("selectFreeRoute", () => {
     expect(result.paused).toBe(false);
     expect(result.rejected).toHaveLength(1);
   });
+
+  it("prefers higher-priority eligible routes without overriding free-only policy", () => {
+    const result = selectFreeRoute([
+      route({ id: "default", priority: 0 }),
+      route({ id: "preferred", priority: 20 }),
+      route({ id: "paid-highest", eligibility: "paid", priority: 100 })
+    ], now);
+    expect(result.selected?.id).toBe("preferred");
+    expect(result.rejected.some((item) => item.routeId === "paid-highest")).toBe(true);
+  });
+
+  it("requires all requested capabilities", () => {
+    const result = selectFreeRoute([
+      route({ id: "text-only", capabilities: ["text"] }),
+      route({ id: "vision-capable", capabilities: ["text", "vision"] })
+    ], now, { requiredCapabilities: ["vision"] });
+    expect(result.selected?.id).toBe("vision-capable");
+    expect(result.rejected).toContainEqual({ routeId: "text-only", reason: "missing_capability:vision" });
+  });
+
+  it("skips routes that are in cooldown", () => {
+    const result = selectFreeRoute([
+      route({ id: "cooling", priority: 50, cooldownUntil: "2026-10-15T13:00:00.000Z" }),
+      route({ id: "available", priority: 1 })
+    ], now);
+    expect(result.selected?.id).toBe("available");
+    expect(result.rejected).toContainEqual({ routeId: "cooling", reason: "route_in_cooldown" });
+  });
+
+  it("pauses if every free route lacks required capabilities", () => {
+    const result = selectFreeRoute([route({ capabilities: ["text"] })], now, { requiredCapabilities: ["vision"] });
+    expect(result.selected).toBeNull();
+    expect(result.paused).toBe(true);
+  });
+
   it("pauses instead of falling back to paid routes", () => {
     const result = selectFreeRoute([route({ id: "paid", eligibility: "paid" }), route({ id: "unknown", eligibility: "unknown" })], now);
     expect(result.selected).toBeNull();
