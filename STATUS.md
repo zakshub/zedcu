@@ -6,7 +6,7 @@
 
 ## Current baseline
 
-The project direction, architecture, agent roster, zero-spend policy, security baseline, roadmap, and decisions are being recorded in GitHub. These are planning documents, not a runnable product.
+The project direction, architecture, agent roster, 15 individual agent profiles, zero-spend policy, security baseline, roadmap, implementation specification, and decisions have been committed to GitHub and fetched back for verification. These are planning documents, not a runnable product.
 
 ## Runtime not yet implemented or verified
 
@@ -23,10 +23,10 @@ The project direction, architecture, agent roster, zero-spend policy, security b
 
 ## Next actions
 
-1. Verify every file and commit on GitHub.
-2. Add a minimal project skeleton and CI in a controlled, testable commit.
-3. Implement free-only provider routing and tests before orchestration.
-4. Build durable task persistence and independent monitoring.
+1. Start the implementation baseline: project skeleton, dependency lockfile, CI, lint, typecheck, build, and tests.
+2. Implement free-only provider routing and policy tests before orchestration.
+3. Build durable task persistence, checkpoint recovery, and independent monitoring.
+4. Implement Sirfaraz and scoped specialist dispatch.
 5. Evaluate hosting and dashboard options only after foundations work and with explicit approval.
 
 ## Truth standard
