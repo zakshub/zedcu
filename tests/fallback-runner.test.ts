@@ -55,6 +55,40 @@ describe("runWithFreeFallback", () => {
     expect(result.response).toBeNull();
   });
 
+  it("times out a hung adapter and pauses after exhausting routes", async () => {
+    let observedAbort = false;
+    const result = await runWithFreeFallback(
+      [route("hung")],
+      new Map([["hung", adapter("hung", async (_route, incoming) => new Promise((resolve) => {
+        incoming.signal?.addEventListener("abort", () => { observedAbort = true; });
+        void resolve;
+      }))]]),
+      { ...request, timeoutMs: 5 },
+      { now }
+    );
+    expect(result.state).toBe("paused");
+    expect(result.attempts[0]?.failureKind).toBe("timeout");
+    expect(observedAbort).toBe(true);
+  });
+
+  it("stops immediately when the task is already cancelled", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    let called = false;
+    const result = await runWithFreeFallback(
+      [route("first")],
+      new Map([["first", adapter("first", async () => {
+        called = true;
+        return { text: "should not run" };
+      })]]),
+      { ...request, signal: controller.signal },
+      { now }
+    );
+    expect(called).toBe(false);
+    expect(result.state).toBe("paused");
+    expect(result.reason).toBe("cancelled");
+  });
+
   it("respects the attempt limit", async () => {
     const result = await runWithFreeFallback(
       [route("first"), route("second")],
