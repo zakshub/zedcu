@@ -24,7 +24,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 2 — Durable task engine
 - [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
 - [ ] Choose persistent database and queue based on verified free-tier terms and reliability.
-- [ ] Implement worker leases, idempotency, checkpointing, and restart recovery.
+- [ ] Implement durable worker leases, idempotency, checkpointing, and restart recovery (in-memory lease/idempotency contract exists; production persistence remains pending).
 - [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
 
