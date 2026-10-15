@@ -8,7 +8,7 @@ Updated: 2026-10-15
 - Provider request/response contracts and normalized failure categories.
 - Free-route policy requiring explicit zero-cost evidence checked within 30 days.
 - Route selector that rejects paid/unknown routes and pauses if no eligible route exists.
-- Bounded fallback runner with per-route attempt records, duplicate-route prevention, retryable failure handling, and rejection of responses reporting non-zero cost.
+- Bounded fallback runner with per-route attempt records, duplicate-route prevention, retryable failure handling, per-request timeout, cooperative cancellation signal, and fail-closed rejection when zero cost is not explicitly reported.
 - Guarded task-state transitions aligned with the roadmap, including planning and dispatch.
 - Task records, an append-only ordered audit-event history, a storage interface, a single-process JSON file store with atomic replacement, optimistic version checks, and restart-read tests.
 - Task service for creation, validated state transitions, numbered checkpoints, and audit events for creation/state/checkpoint changes.
