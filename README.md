@@ -16,7 +16,7 @@ ZEDCU is a planned cloud-hosted AI operating system: one command interface, spec
 
 ## Current repository truth
 
-This repository is being initialized with the documented project direction and staged implementation plan. The presence of planning files does not mean the full agent runtime, dashboard, or cloud service already exists.
+The repository now includes an initial, dependency-free Node.js policy core, tests, and GitHub Actions checks on the `feat/free-only-routing-baseline` branch. This is not yet a live model router or full agent runtime; provider network calls remain disabled. See [docs/RUNTIME_BASELINE.md](docs/RUNTIME_BASELINE.md).
 
 ## Non-negotiable rules
 
@@ -54,4 +54,4 @@ Do not skip cloud deployment before routing, persistence, monitoring, and securi
 
 ## Implementation truth
 
-This repository's planning documents are not a runnable implementation. Runtime features must be marked complete only after code exists, checks pass, and remote commit contents are verified.
+The current branch contains an executable local policy baseline, but no real provider adapter, task persistence, agent execution, dashboard, or cloud deployment. Runtime features must be marked complete only after code exists, checks pass, and remote commit contents are verified.
