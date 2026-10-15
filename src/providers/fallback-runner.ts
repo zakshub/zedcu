@@ -4,7 +4,10 @@ import { selectFreeRoute } from "../policy/route-selector.js";
 
 export interface RouteAttempt {
   routeId: string;
+  /** Upstream provider/model owner, when known. */
   provider: string;
+  /** Gateway used for this attempt; defaults to provider for older route records. */
+  gatewayId?: string;
   model: string;
   outcome: "success" | "failed" | "skipped";
   failureKind?: string;
@@ -101,10 +104,11 @@ export async function runWithFreeFallback(
 
     const route = selection.selected;
     attemptedIds.add(route.id);
-    const adapter = adapters.get(route.provider);
+    const gatewayId = route.gatewayId ?? route.provider;
+    const adapter = adapters.get(gatewayId);
     if (!adapter) {
       attempts.push({
-        routeId: route.id, provider: route.provider, model: route.model,
+        routeId: route.id, provider: route.provider, gatewayId, model: route.model,
         outcome: "skipped", note: "No adapter registered for this provider."
       });
       continue;
