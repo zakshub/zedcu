@@ -14,8 +14,8 @@ export interface QueueLease extends QueueMessage {
 export interface TaskQueue {
   enqueue(taskId: string, idempotencyKey: string, now?: Date): Promise<QueueMessage>;
   claim(workerId: string, leaseMilliseconds: number, now?: Date): Promise<QueueLease | null>;
-  acknowledge(taskId: string, leaseToken: string): Promise<void>;
-  release(taskId: string, leaseToken: string): Promise<void>;
+  acknowledge(taskId: string, leaseToken: string, now?: Date): Promise<void>;
+  release(taskId: string, leaseToken: string, now?: Date): Promise<void>;
 }
 
 export class QueueConflictError extends Error {
@@ -93,25 +93,25 @@ export class InMemoryTaskQueue implements TaskQueue {
     };
   }
 
-  async acknowledge(taskId: string, leaseToken: string): Promise<void> {
-    const entry = this.requireActiveLease(taskId, leaseToken);
+  async acknowledge(taskId: string, leaseToken: string, now = new Date()): Promise<void> {
+    const entry = this.requireActiveLease(taskId, leaseToken, now);
     entry.status = "acknowledged";
     delete entry.workerId;
     delete entry.leaseToken;
     delete entry.leaseExpiresAt;
   }
 
-  async release(taskId: string, leaseToken: string): Promise<void> {
-    const entry = this.requireActiveLease(taskId, leaseToken);
+  async release(taskId: string, leaseToken: string, now = new Date()): Promise<void> {
+    const entry = this.requireActiveLease(taskId, leaseToken, now);
     entry.status = "queued";
     delete entry.workerId;
     delete entry.leaseToken;
     delete entry.leaseExpiresAt;
   }
 
-  private requireActiveLease(taskId: string, leaseToken: string): QueueEntry {
+  private requireActiveLease(taskId: string, leaseToken: string, now: Date): QueueEntry {
     const entry = this.entries.get(taskId);
-    if (!entry || entry.status !== "leased" || entry.leaseToken !== leaseToken) {
+    if (!entry || entry.status !== "leased" || entry.leaseToken !== leaseToken || Date.parse(entry.leaseExpiresAt ?? "") <= now.getTime()) {
       throw new QueueConflictError("Task lease is missing, expired, or owned by another claim.");
     }
     return entry;
