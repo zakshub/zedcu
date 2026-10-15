@@ -9,7 +9,7 @@
 
 The `main` branch contains the planning baseline and 15 agent profiles. The implementation branch adds a dependency-free Node.js entry point, fail-closed free-route policy helpers, provider-error classification, bounded retry decisions, policy tests, a GitHub Actions workflow, `.env.example`, and local setup notes.
 
-The implementation branch has been written to GitHub, but its tests and CI have **not yet been observed passing**. Treat these changes as implemented but not yet validated until CI evidence is available.
+GitHub Actions run 16 completed successfully on the implementation branch after a quota-classification test exposed and fixed a case-sensitivity bug. Syntax checks and all 8 policy tests passed in that run. This validates the current policy baseline only; it does not validate any real provider integration.
 
 ## Implemented in the branch — not yet independently validated
 
