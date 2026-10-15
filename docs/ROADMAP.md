@@ -5,18 +5,22 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [ ] Add CI and validate the repository.
+- [x] Add initial Node.js project skeleton, built-in test suite, and GitHub Actions checks (done; latest run passed).
+- [ ] Observe passing CI and validate the repository (initial routing baseline passes; broader checks remain).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
 - [ ] Implement provider adapter interface.
 - [ ] Verify free-route eligibility from current official provider evidence.
-- [ ] Maintain a strict allowlist; reject unknown or paid routes before network calls.
-- [ ] Track attempted routes per task.
-- [ ] Classify quota, rate-limit, auth, timeout, and transient failures.
+- [x] Add initial fail-closed route validation helper; live provider calls remain disabled.
+- [ ] Wire policy into a real adapter and reject unknown or paid routes before network calls.
+- [x] Add pure helper to skip route IDs already attempted (not yet persisted per task).
+- [ ] Persist attempted routes per task.
+- [x] Add provider failure classification helper.
+- [ ] Validate classification against real adapter error contracts.
 - [ ] Add bounded retry/backoff and cancellation.
 - [ ] Record token usage and cost evidence; pause on ambiguity.
-- [ ] Unit-test every policy branch.
+- [x] Add initial policy unit tests (8 tests pass in GitHub Actions).
 
 ## Stage 2 — Durable task engine
 - [ ] Define task/event/checkpoint/approval/artifact schemas.
