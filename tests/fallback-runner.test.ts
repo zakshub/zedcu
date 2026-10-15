@@ -12,7 +12,7 @@ function route(id: string, provider = id, overrides: Partial<ProviderRoute> = {}
   };
 }
 const request: ProviderRequest = { taskId: "task-1", prompt: "test", maxOutputTokens: 100, timeoutMs: 1000 };
-function adapter(providerId: string, generate: () => Promise<ProviderResponse>): ProviderAdapter {
+function adapter(providerId: string, generate: (route: ProviderRoute, request: ProviderRequest) => Promise<ProviderResponse>): ProviderAdapter {
   return { providerId, generate };
 }
 
