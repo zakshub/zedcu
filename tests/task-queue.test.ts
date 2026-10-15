@@ -19,6 +19,7 @@ describe("InMemoryTaskQueue contract adapter", () => {
     const first = await queue.claim("worker-a", 1_000, instant(0));
     expect(first?.attempts).toBe(1);
     expect(await queue.claim("worker-b", 1_000, instant(0))).toBeNull();
+    await expect(queue.acknowledge("task-1", first?.leaseToken ?? "", instant(1))).rejects.toThrow(QueueConflictError);
 
     const reclaimed = await queue.claim("worker-b", 1_000, instant(2));
     expect(reclaimed?.attempts).toBe(2);
