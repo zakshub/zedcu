@@ -2,6 +2,8 @@
 
 Updated: 2026-10-15
 
+Latest CI verification: workflow run #95 passed typecheck, tests, build, and lint after the gateway-registry change.
+
 ## Implemented in this branch (CI status must be checked on the latest commit)
 
 - Strict TypeScript project baseline and npm scripts.
