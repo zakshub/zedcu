@@ -59,7 +59,7 @@ describe("runWithFreeFallback", () => {
     let observedAbort = false;
     const result = await runWithFreeFallback(
       [route("hung")],
-      new Map([["hung", adapter("hung", async (_route: ProviderRoute, incoming: ProviderRequest): Promise<ProviderResponse> => new Promise<ProviderResponse>((_resolve) => {
+      new Map([["hung", adapter("hung", async (_route: ProviderRoute, incoming: ProviderRequest): Promise<ProviderResponse> => new Promise<ProviderResponse>(() => {
         incoming.signal?.addEventListener("abort", () => { observedAbort = true; });
       }))]]),
       { ...request, timeoutMs: 5 },
