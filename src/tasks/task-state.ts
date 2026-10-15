@@ -1,14 +1,16 @@
 export type TaskState =
   | "queued"
+  | "planning"
   | "running"
   | "paused"
-  | "waiting_approval"
+  | "waiting_for_approval"
   | "failed"
   | "completed"
   | "cancelled";
 
 export type TaskEvent =
   | "start"
+  | "dispatch"
   | "pause"
   | "resume"
   | "request_approval"
@@ -19,16 +21,17 @@ export type TaskEvent =
   | "cancel";
 
 const transitions: Record<TaskState, Partial<Record<TaskEvent, TaskState>>> = {
-  queued: { start: "running", cancel: "cancelled" },
+  queued: { start: "planning", cancel: "cancelled" },
+  planning: { dispatch: "running", pause: "paused", fail: "failed", cancel: "cancelled" },
   running: {
     pause: "paused",
-    request_approval: "waiting_approval",
+    request_approval: "waiting_for_approval",
     fail: "failed",
     complete: "completed",
     cancel: "cancelled"
   },
   paused: { resume: "queued", cancel: "cancelled", fail: "failed" },
-  waiting_approval: {
+  waiting_for_approval: {
     approval_granted: "queued",
     approval_denied: "paused",
     cancel: "cancelled"
