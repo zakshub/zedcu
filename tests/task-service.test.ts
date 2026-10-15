@@ -23,7 +23,7 @@ async function setup() {
 }
 
 describe("TaskService", () => {
-  it("creates, transitions, and checkpoints a task durably", async () => {
+  it("creates, transitions, checkpoints, and audits a task durably", async () => {
     const { store, service } = await setup();
     const created = await service.create("  implement persistence  ");
     expect(created.request).toBe("implement persistence");
@@ -32,6 +32,10 @@ describe("TaskService", () => {
     const running = await service.apply(created.id, "dispatch");
     const checkpointed = await service.checkpoint(running.id, "Initial safe checkpoint", ["src/example.ts"]);
     expect(checkpointed.checkpoints[0]?.checkpointNumber).toBe(1);
+    expect(checkpointed.events.map((event) => event.type)).toEqual([
+      "created", "state_transition", "state_transition", "checkpoint_created"
+    ]);
+    expect(checkpointed.events.map((event) => event.sequence)).toEqual([1, 2, 3, 4]);
     const recovered = await new JsonTaskStore(join(directory, "tasks.json")).get(created.id);
     expect(recovered).toEqual(checkpointed);
     expect(await store.get(created.id)).toEqual(checkpointed);
