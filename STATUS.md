@@ -8,13 +8,13 @@
 
 ## Current baseline
 
-The planning baseline and 15 agent profiles remain on `main`. Implementation is happening on a separate feature branch. The latest confirmed CI run passed typecheck, tests, build, and lint on the gateway-registry implementation (workflow run #95).
+The planning baseline and 15 agent profiles remain on `main`. Implementation is happening on a separate feature branch. The latest confirmed CI run (#115) passed typecheck, tests, build, and lint after the capability-aware dynamic routing changes.
 
 ## Implemented in the feature branch
 
 - Strict TypeScript project configuration and npm scripts.
 - Provider adapter contracts and normalized failure categories.
-- Pluggable gateway registry and route-level gateway identity, separated from upstream provider/model identity; gateway registry and cross-gateway routing tests pass CI.
+- Pluggable gateway registry and route-level gateway identity, separated from upstream provider/model identity; gateway registry, cross-gateway routing, capability selection, priority, and cooldown tests pass CI.
 - Gateway-neutral strategy document that treats OmniRoute, OpenRouter, direct providers, and additional compatible gateways as independently evaluated options.
 - Free-route policy that rejects paid/unknown routes and requires explicit zero-cost pricing evidence checked within 30 days.
 - Bounded alternate-route attempts with per-run attempt records, retryable-failure handling, duplicate-route prevention, and a safe pause when no eligible route remains.
