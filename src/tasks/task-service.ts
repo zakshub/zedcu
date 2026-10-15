@@ -33,7 +33,8 @@ export class TaskService {
       createdAt: now,
       updatedAt: now,
       version: 1,
-      checkpoints: []
+      checkpoints: [],
+      events: [{ sequence: 1, type: "created", at: now, toState: "queued", summary: "Task created." }]
     };
     await this.store.create(task);
     return task;
@@ -42,11 +43,22 @@ export class TaskService {
   async apply(taskId: string, event: TaskEvent): Promise<TaskRecord> {
     const current = await this.store.get(taskId);
     if (!current) throw new TaskNotFoundError(taskId);
+    const nextState = transitionTask(current.state, event);
+    const now = this.now().toISOString();
     const updated: TaskRecord = {
       ...current,
-      state: transitionTask(current.state, event),
-      updatedAt: this.now().toISOString(),
-      version: current.version + 1
+      state: nextState,
+      updatedAt: now,
+      version: current.version + 1,
+      events: [...current.events, {
+        sequence: current.events.length + 1,
+        type: "state_transition",
+        at: now,
+        fromState: current.state,
+        toState: nextState,
+        action: event,
+        summary: `State changed from ${current.state} to ${nextState}.`
+      }]
     };
     await this.store.save(updated, current.version);
     return updated;
@@ -59,18 +71,26 @@ export class TaskService {
     if (current.state === "completed" || current.state === "cancelled") {
       throw new Error(`Cannot checkpoint a task in terminal state '${current.state}'.`);
     }
+    const now = this.now().toISOString();
     const checkpoint: TaskCheckpoint = {
       checkpointNumber: (current.checkpoints.at(-1)?.checkpointNumber ?? 0) + 1,
-      createdAt: this.now().toISOString(),
+      createdAt: now,
       state: current.state,
       summary: summary.trim(),
       artifactPaths: [...artifactPaths]
     };
     const updated: TaskRecord = {
       ...current,
-      updatedAt: checkpoint.createdAt,
+      updatedAt: now,
       version: current.version + 1,
-      checkpoints: [...current.checkpoints, checkpoint]
+      checkpoints: [...current.checkpoints, checkpoint],
+      events: [...current.events, {
+        sequence: current.events.length + 1,
+        type: "checkpoint_created",
+        at: now,
+        toState: current.state,
+        summary: `Checkpoint ${checkpoint.checkpointNumber} created: ${summary.trim()}`
+      }]
     };
     await this.store.save(updated, current.version);
     return updated;
