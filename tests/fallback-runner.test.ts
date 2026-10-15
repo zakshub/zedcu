@@ -88,6 +88,17 @@ describe("runWithFreeFallback", () => {
     expect(result.reason).toBe("cancelled");
   });
 
+  it("rejects a response when zero cost is not explicitly proven", async () => {
+    const result = await runWithFreeFallback(
+      [route("first")],
+      new Map([["first", adapter("first", async () => ({ text: "no cost evidence" }))]]),
+      request, { now }
+    );
+    expect(result.state).toBe("paused");
+    expect(result.response).toBeNull();
+    expect(result.attempts[0]?.failureKind).toBe("cost_not_proven_zero");
+  });
+
   it("respects the attempt limit", async () => {
     const result = await runWithFreeFallback(
       [route("first"), route("second")],
