@@ -101,7 +101,7 @@ export function classifyProviderError(error) {
   if (status === 429 || /rate.?limit/.test(code) || /rate limit/.test(message)) {
     return "rate_limit";
   }
-  if (/quota|insufficient_quota|billing_hard_limit/.test(code) || /quota exhausted|credit balance/.test(message)) {
+  if (/quota|insufficient_quota|billing_hard_limit/i.test(code) || /quota exhausted|credit balance/.test(message)) {
     return "quota_exhausted";
   }
   if (code === "ETIMEDOUT" || code === "ECONNABORTED" || /timeout|timed out/.test(message)) {
