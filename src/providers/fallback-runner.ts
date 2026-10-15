@@ -24,6 +24,7 @@ export interface FallbackResult {
 export interface FallbackOptions {
   maxAttempts?: number;
   now?: Date;
+  requiredCapabilities?: string[];
 }
 
 function describeFailure(error: unknown): { kind: string; retryable: boolean; message: string } {
@@ -92,7 +93,7 @@ export async function runWithFreeFallback(
       return { state: "paused", response: null, attempts, reason: "cancelled" };
     }
     const remaining = routes.filter((route) => !attemptedIds.has(route.id));
-    const selection = selectFreeRoute(remaining, now);
+    const selection = selectFreeRoute(remaining, now, { requiredCapabilities: options.requiredCapabilities });
     if (!selection.selected) {
       return {
         state: "paused",
