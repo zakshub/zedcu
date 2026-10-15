@@ -31,6 +31,23 @@ describe("runWithFreeFallback", () => {
     expect(result.attempts.map((item) => item.routeId)).toEqual(["first", "second"]);
   });
 
+
+  it("routes through a gateway ID distinct from the upstream provider", async () => {
+    let called = false;
+    const result = await runWithFreeFallback(
+      [route("omni-route", "upstream-provider", { gatewayId: "omniroute" })],
+      new Map([["omniroute", adapter("omniroute", async () => {
+        called = true;
+        return { text: "ok via gateway", reportedCostUsd: 0 };
+      })]]),
+      request, { now }
+    );
+    expect(called).toBe(true);
+    expect(result.state).toBe("completed");
+    expect(result.attempts[0]?.gatewayId).toBe("omniroute");
+    expect(result.attempts[0]?.provider).toBe("upstream-provider");
+  });
+
   it("never calls a paid route", async () => {
     let paidCalled = false;
     const result = await runWithFreeFallback(
