@@ -1,4 +1,4 @@
-import type { TaskState } from "./task-state.js";
+import type { TaskEvent as StateEvent, TaskState } from "./task-state.js";
 
 export interface TaskCheckpoint {
   checkpointNumber: number;
@@ -6,6 +6,16 @@ export interface TaskCheckpoint {
   state: TaskState;
   summary: string;
   artifactPaths: string[];
+}
+
+export interface TaskAuditEvent {
+  sequence: number;
+  type: "created" | "state_transition" | "checkpoint_created";
+  at: string;
+  fromState?: TaskState;
+  toState: TaskState;
+  action?: StateEvent;
+  summary: string;
 }
 
 export interface TaskRecord {
@@ -16,6 +26,7 @@ export interface TaskRecord {
   updatedAt: string;
   version: number;
   checkpoints: TaskCheckpoint[];
+  events: TaskAuditEvent[];
   lastError?: string;
 }
 
