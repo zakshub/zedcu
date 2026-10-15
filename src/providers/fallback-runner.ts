@@ -93,7 +93,7 @@ export async function runWithFreeFallback(
       return { state: "paused", response: null, attempts, reason: "cancelled" };
     }
     const remaining = routes.filter((route) => !attemptedIds.has(route.id));
-    const selection = selectFreeRoute(remaining, now, { requiredCapabilities: options.requiredCapabilities });
+    const selection = selectFreeRoute(remaining, now, options.requiredCapabilities ? { requiredCapabilities: options.requiredCapabilities } : {});
     if (!selection.selected) {
       return {
         state: "paused",
