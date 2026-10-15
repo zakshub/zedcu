@@ -48,6 +48,24 @@ describe("runWithFreeFallback", () => {
     expect(result.attempts[0]?.provider).toBe("upstream-provider");
   });
 
+
+  it("selects a route that satisfies requested task capabilities", async () => {
+    const result = await runWithFreeFallback(
+      [
+        route("text-only", "text-gateway", { capabilities: ["text"], priority: 20 }),
+        route("vision-route", "vision-gateway", { capabilities: ["text", "vision"], priority: 1 })
+      ],
+      new Map([
+        ["text-gateway", adapter("text-gateway", async () => ({ text: "wrong route", reportedCostUsd: 0 }))],
+        ["vision-gateway", adapter("vision-gateway", async () => ({ text: "vision-capable", reportedCostUsd: 0 }))]
+      ]),
+      request, { now, requiredCapabilities: ["vision"] }
+    );
+    expect(result.state).toBe("completed");
+    expect(result.response?.text).toBe("vision-capable");
+    expect(result.attempts.map((item) => item.routeId)).toEqual(["vision-route"]);
+  });
+
   it("never calls a paid route", async () => {
     let paidCalled = false;
     const result = await runWithFreeFallback(
