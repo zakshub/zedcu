@@ -1,0 +1,14 @@
+{
+  "name": "zedcu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zero-budget, evidence-driven command universe",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "check": "node --check src/index.js && node --check src/routing/policy.js",
+    "test": "node --test"
+  }
+}
