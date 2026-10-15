@@ -112,11 +112,13 @@ export async function runWithFreeFallback(
 
     try {
       const response = await generateWithTimeout(adapter, route, request);
-      if (response.reportedCostUsd !== undefined && response.reportedCostUsd !== 0) {
+      if (response.reportedCostUsd !== 0) {
         attempts.push({
           routeId: route.id, provider: route.provider, model: route.model,
-          outcome: "failed", failureKind: "non_zero_cost_reported",
-          note: "Provider response reported a non-zero cost; result rejected by zero-spend policy."
+          outcome: "failed", failureKind: response.reportedCostUsd === undefined ? "cost_not_proven_zero" : "non_zero_cost_reported",
+          note: response.reportedCostUsd === undefined
+            ? "Provider response did not prove zero cost; result rejected by zero-spend policy."
+            : "Provider response reported a non-zero cost; result rejected by zero-spend policy."
         });
         return { state: "paused", response: null, attempts, reason: "provider_failures" };
       }
