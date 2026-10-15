@@ -42,7 +42,8 @@ describe("GatewayRegistry", () => {
   it("preserves backwards compatibility when no gateway id is provided", () => {
     const registry = new GatewayRegistry();
     registry.register(descriptor({ id: "upstream-model-provider" }), adapter);
-    const { gatewayId: _gatewayId, ...legacyRoute } = route;
+    const legacyRoute: ProviderRoute = { ...route };
+    delete legacyRoute.gatewayId;
     expect(registry.getAdapterForRoute(legacyRoute)).toBe(adapter);
   });
 
