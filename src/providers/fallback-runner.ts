@@ -118,7 +118,7 @@ export async function runWithFreeFallback(
       const response = await generateWithTimeout(adapter, route, request);
       if (response.reportedCostUsd !== 0) {
         attempts.push({
-          routeId: route.id, provider: route.provider, model: route.model,
+          routeId: route.id, provider: route.provider, gatewayId, model: route.model,
           outcome: "failed", failureKind: response.reportedCostUsd === undefined ? "cost_not_proven_zero" : "non_zero_cost_reported",
           note: response.reportedCostUsd === undefined
             ? "Provider response did not prove zero cost; result rejected by zero-spend policy."
@@ -127,21 +127,21 @@ export async function runWithFreeFallback(
         return { state: "paused", response: null, attempts, reason: "provider_failures" };
       }
       attempts.push({
-        routeId: route.id, provider: route.provider, model: route.model,
+        routeId: route.id, provider: route.provider, gatewayId, model: route.model,
         outcome: "success", note: "Route passed free-route policy and returned a response."
       });
       return { state: "completed", response, attempts, reason: "success" };
     } catch (error) {
       if (request.signal?.aborted) {
         attempts.push({
-          routeId: route.id, provider: route.provider, model: route.model,
+          routeId: route.id, provider: route.provider, gatewayId, model: route.model,
           outcome: "failed", failureKind: "cancelled", note: "Task cancellation was requested."
         });
         return { state: "paused", response: null, attempts, reason: "cancelled" };
       }
       const failure = describeFailure(error);
       attempts.push({
-        routeId: route.id, provider: route.provider, model: route.model,
+        routeId: route.id, provider: route.provider, gatewayId, model: route.model,
         outcome: "failed", failureKind: failure.kind, note: failure.message
       });
       if (!failure.retryable) {
