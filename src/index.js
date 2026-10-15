@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { decideNextAction, selectNextEligibleRoute } from "./routing/policy.js";
 
 export function getRuntimeStatus() {
@@ -21,6 +23,6 @@ export function planRouteAttempt(routes, attemptedRouteIds = [], now = new Date(
 
 export { decideNextAction };
 
-if (import.meta.url === new URL(process.argv[1] ?? "", "file:").href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   console.log(JSON.stringify(getRuntimeStatus(), null, 2));
 }
