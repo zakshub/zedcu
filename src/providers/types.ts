@@ -17,6 +17,7 @@ export interface ProviderRequest {
   prompt: string;
   maxOutputTokens: number;
   timeoutMs: number;
+  signal?: AbortSignal;
 }
 
 export interface ProviderResponse {
