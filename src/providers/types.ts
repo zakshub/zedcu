@@ -7,6 +7,12 @@ export interface ProviderRoute {
   provider: string;
   /** Optional transport gateway ID; defaults to provider for older route records. */
   gatewayId?: string;
+  /** Capability labels supported by this concrete route, e.g. "vision" or "json_mode". */
+  capabilities?: string[];
+  /** Higher numbers are preferred after all policy/capability gates pass. */
+  priority?: number;
+  /** Optional ISO timestamp before which this route should not be selected. */
+  cooldownUntil?: string;
   model: string;
   enabled: boolean;
   eligibility: "verified_free" | "paid" | "unknown";
