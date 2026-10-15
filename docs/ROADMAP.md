@@ -10,6 +10,8 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 
 ## Stage 1 — Reliable free-only model routing
 - [x] Implement provider adapter interface (contract only; live adapters remain pending).
+- [x] Add gateway registry extension point and separate gateway identity from upstream provider identity (real gateway adapters remain pending).
+- [x] Document a vendor-neutral gateway strategy and candidate integrations (candidates are not yet approved or connected).
 - [ ] Verify free-route eligibility from current official provider evidence.
 - [x] Implement policy gate that rejects unknown or paid routes before adapter invocation (official evidence verification and live routing remain pending).
 - [x] Track attempted routes within a bounded fallback run (durable per-task attempt ledger remains pending).
