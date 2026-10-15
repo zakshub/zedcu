@@ -5,24 +5,24 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [ ] Add CI and validate the repository.
+- [x] Add CI and validate the repository (latest branch revision passed typecheck, tests, build, and lint).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
-- [ ] Implement provider adapter interface.
+- [x] Implement provider adapter interface (contract only; live adapters remain pending).
 - [ ] Verify free-route eligibility from current official provider evidence.
-- [ ] Maintain a strict allowlist; reject unknown or paid routes before network calls.
-- [ ] Track attempted routes per task.
-- [ ] Classify quota, rate-limit, auth, timeout, and transient failures.
-- [ ] Add bounded retry/backoff and cancellation.
+- [x] Implement policy gate that rejects unknown or paid routes before adapter invocation (official evidence verification and live routing remain pending).
+- [x] Track attempted routes within a bounded fallback run (durable per-task attempt ledger remains pending).
+- [x] Define normalized failure categories for quota, rate-limit, auth, timeout, and transient failures.
+- [ ] Add bounded retry/backoff and cancellation (bounded alternate-route attempts exist; backoff and cancellation wiring remain pending).
 - [ ] Record token usage and cost evidence; pause on ambiguity.
-- [ ] Unit-test every policy branch.
+- [x] Add unit tests for free-route policy, fallback, task state, persistence, and checkpoint behavior (expand coverage as integration grows).
 
 ## Stage 2 — Durable task engine
-- [ ] Define task/event/checkpoint/approval/artifact schemas.
+- [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
 - [ ] Choose persistent database and queue based on verified free-tier terms and reliability.
 - [ ] Implement worker leases, idempotency, checkpointing, and restart recovery.
-- [ ] Implement queued/running/paused/waiting-approval/failed/completed/cancelled states.
+- [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
 
 ## Stage 3 — Sirfaraz and specialist agents
