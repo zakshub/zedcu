@@ -10,8 +10,8 @@ Updated: 2026-10-15
 - Route selector that rejects paid/unknown routes and pauses if no eligible route exists.
 - Bounded fallback runner with per-route attempt records, duplicate-route prevention, retryable failure handling, and rejection of responses reporting non-zero cost.
 - Guarded task-state transitions aligned with the roadmap, including planning and dispatch.
-- Task records, a storage interface, a single-process JSON file store with atomic replacement, optimistic version checks, and restart-read tests.
-- Task service for creation, state transitions, and numbered checkpoints.
+- Task records, an append-only ordered audit-event history, a storage interface, a single-process JSON file store with atomic replacement, optimistic version checks, and restart-read tests.
+- Task service for creation, validated state transitions, numbered checkpoints, and audit events for creation/state/checkpoint changes.
 - Unit tests for route policy, fallback, task transitions, persistence conflicts, and checkpoint recovery.
 - GitHub Actions workflow for typecheck, tests, build, and lint.
 - Safe environment-variable example without credentials.
