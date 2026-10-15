@@ -52,14 +52,16 @@ A future evidence source may be an official pricing page, official API response,
 
 The router should be able to:
 - disable one gateway without disabling other integrations
-- rank eligible routes using task requirements, capabilities, health, recent failures, and quota signals
+- rank eligible routes by explicit priority after capability requirements and cooldown/availability gates pass
+- record capability requirements for a task and skip routes that cannot satisfy them
+- honor route cooldown timestamps after rate limits or transient provider health problems
 - use bounded failover across distinct gateway/model routes
 - avoid repeating attempted routes for the same task
 - apply cooldowns to rate-limited routes
 - pause when no verified free route remains
 - add new adapters without changing agent orchestration
 
-Routing must remain deterministic enough to audit. Any ranking decision should record the candidates, exclusions, selected route, and reason. Never silently switch to paid usage.
+Route priority is a preference only and can never override the zero-cost policy. Routing must remain deterministic enough to audit. Any ranking decision should record the candidates, exclusions, selected route, and reason. Never silently switch to paid usage.
 
 ## Integration checklist
 
