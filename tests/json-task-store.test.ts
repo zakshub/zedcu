@@ -17,7 +17,8 @@ async function setup(): Promise<{ store: JsonTaskStore; task: TaskRecord }> {
   const task: TaskRecord = {
     id: "task-1", request: "check persistence", state: "queued",
     createdAt: "2026-10-15T12:00:00.000Z", updatedAt: "2026-10-15T12:00:00.000Z",
-    version: 1, checkpoints: []
+    version: 1, checkpoints: [],
+    events: [{ sequence: 1, type: "created", at: "2026-10-15T12:00:00.000Z", toState: "queued", summary: "Task created." }]
   };
   return { store, task };
 }
