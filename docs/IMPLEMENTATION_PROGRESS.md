@@ -9,6 +9,7 @@ Latest CI verification: workflow run #95 passed typecheck, tests, build, and lin
 - Strict TypeScript project baseline and npm scripts.
 - Provider request/response contracts and normalized failure categories.
 - Pluggable gateway registry with enable/disable metadata, protocol/capability descriptors, and duplicate-ID protection.
+- Capability-aware route selection with explicit priority ordering, cooldown filtering, and required task capabilities; free-only policy remains the hard gate.
 - Route model that separates the gateway used for transport from the upstream provider/model identity, while preserving legacy route compatibility.
 - Gateway-neutral integration strategy covering OmniRoute, OpenRouter, direct providers, and candidates such as LiteLLM, Bifrost, Portkey Gateway, New API, Agent Router / Envoy AI Gateway, Kong AI Gateway, and Cloudflare AI Gateway. These are candidates only; no real network adapters are connected.
 - Free-route policy requiring explicit zero-cost evidence checked within 30 days.
