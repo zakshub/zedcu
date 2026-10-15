@@ -3,7 +3,10 @@ export type ProviderFailureKind =
 
 export interface ProviderRoute {
   id: string;
+  /** Upstream provider/model owner, when known. */
   provider: string;
+  /** Optional transport gateway ID; defaults to provider for older route records. */
+  gatewayId?: string;
   model: string;
   enabled: boolean;
   eligibility: "verified_free" | "paid" | "unknown";
