@@ -27,7 +27,7 @@ interface EventRow {
   occurred_at: Date | string;
   from_state: TaskState | null;
   to_state: TaskState;
-  action: TaskAuditEvent["action"] | null;
+  action: NonNullable<TaskAuditEvent["action"]> | null;
   summary: string;
 }
 
