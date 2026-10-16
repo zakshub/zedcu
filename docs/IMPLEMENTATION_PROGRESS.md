@@ -2,7 +2,7 @@
 
 Updated: 2026-10-16
 
-The feature branch now includes a queue contract and an in-memory test adapter for idempotency, worker leases, expiry/reclaim, acknowledgement, and retry release. This is contract-level progress, not durable or cloud-ready queue infrastructure.
+The feature branch includes a queue contract and in-memory test adapter. A PostgreSQL schema foundation has now been added for durable tasks, checkpoints, ordered audit events, idempotency keys, and worker leases. The schema is not a connected database adapter and is not yet runtime-tested.
 
 ## Implemented in this branch (verify CI on latest commit)
 
@@ -16,38 +16,45 @@ The feature branch now includes a queue contract and an in-memory test adapter f
 - Guarded task-state transitions, task records, ordered audit events, a storage interface, and a single-process JSON store with atomic replacement, optimistic version checks, and restart-read tests.
 - Task service for task creation, state transitions, numbered checkpoints, and audit events.
 - Queue contract with idempotency-key conflict rules, bounded worker leases, expired-lease reclaim, acknowledgement, retry release, and attempt tracking; currently backed only by an in-memory test adapter.
+- PostgreSQL schema migration for tasks, checkpoints, ordered audit events, durable idempotency keys, queue status, and lease ownership constraints.
+- PostgreSQL transaction/lease design with required atomic create, claim, acknowledge/release, optimistic concurrency, and crash-recovery acceptance tests.
 - Unit tests for routing policy, fallback, task transitions, persistence conflicts, checkpoints, queue idempotency, and lease behavior.
-- GitHub Actions workflow for typecheck, tests, build, and lint; safe environment-variable example without credentials.
+- GitHub Actions workflow for typecheck, tests, build, lint, format check, and a dependency audit summary; safe environment-variable example without credentials.
 
 ## Important limitations
 
-The JSON task store and in-memory queue are development/test adapters. Neither provides distributed transactions, cross-process locking, durable queue state, backups, or production worker coordination. A production queue/database adapter must implement atomic claim and lease ownership checks; expired workers must not be allowed to acknowledge a lease they no longer own.
+The JSON task store and in-memory queue are development/test adapters. The new SQL migration is only a schema foundation: no PostgreSQL adapter, provisioned database, connection pooling, backups, or recovery process exists yet. The schema has not been applied to a live database or verified by a PostgreSQL parser in this environment.
 
 Task checkpoints currently store summaries and artifact paths, not workspace snapshots or automated restore instructions. Provider route eligibility relies on supplied evidence metadata; no live provider adapters or official pricing verification are wired. A provider-reported zero cost is not independent billing proof.
 
 ## Not implemented yet
 
-- Production database and queue adapters, migrations, backups, and disaster recovery.
-- Durable idempotency records and atomic task+queue creation.
+- PostgreSQL task-store and queue adapters with transaction-level tests.
+- Database provisioning, backups, and disaster recovery.
+- Durable task+queue creation and idempotency in runtime code.
 - Real provider API adapters and independent cost/usage reconciliation.
 - Sirfaraz orchestration and specialist execution.
 - Separate read-only Raza monitoring service.
 - Authenticated GitHub automation, cloud deployment, mobile dashboard, and notifications.
+- Committed npm lockfile from a clean Node 22 environment.
 
 ## Latest work (2026-10-16)
 
 - Deferred the external OmniRoute audit at the owner's direction; implementation continues using repository code and GitHub CI evidence.
 - Fixed queue test nondeterminism by passing explicit timestamps to acknowledgement/release operations.
 - Added a regression test proving an expired lease cannot be released.
-- The latest commits have not yet returned a CI run/status, so this repair remains pending verification.
+- Added `migrations/001_durable_task_queue.sql` and `docs/POSTGRES_TASK_QUEUE_DESIGN.md`.
+- CI run/status lookup for the newest commits returned no runs/statuses. The schema and queue changes remain unverified; no tests are claimed as passing on the latest commit.
+- Local cloning/testing remains unavailable in this execution environment due to GitHub DNS resolution failure.
 
 ## Next actions
 
-1. Confirm CI on the latest commit and fix failures.
-2. Generate and commit a lockfile from a clean Node 22 environment.
-3. Compare database/queue candidates against current free-tier limits, persistence, and operational reliability before selecting one.
-4. Add transactional idempotency and lease storage, then crash/restart recovery tests.
-5. Verify official provider terms before enabling real routes.
+1. Confirm CI on the latest branch commit and fix failures.
+2. Obtain a clean Node 22 environment to generate a lockfile and run formatting/typecheck/tests/build/lint.
+3. Validate the migration against PostgreSQL and add integration tests for transaction atomicity, duplicate submissions, lease reclaim, and stale tokens.
+4. Implement the PostgreSQL task store and queue adapter only after testable connection/configuration is available.
+5. Compare database/queue candidates against current free-tier limits and durability before selecting a host; no paid resource without explicit approval.
+6. Verify official provider terms before enabling real routes.
 
 ## Truth standard
 
