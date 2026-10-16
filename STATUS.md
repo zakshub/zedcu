@@ -8,9 +8,9 @@
 
 ## Current baseline
 
-GitHub Actions run #196 passed both jobs on commit `8597e9037098b2a0513f93f1b915ac36e76e3e51`. The main checks passed typecheck, 46 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 job passed migration/schema checks and four live integration tests.
+GitHub Actions run #205 passed both jobs on commit `0ecbaa215e56a63f395585d6ec12516f013d05a5`. The main checks passed typecheck, 50 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 job passed migration/schema checks and four live integration tests.
 
-The PostgreSQL TaskStore now exposes `createQueued()`, which inserts the task, its initial checkpoints/audit history, and the durable queue entry in one transaction. Live CI tests verify persistence/reload, rollback on a history constraint failure, distinct concurrent worker claims, lease expiry/reclaim, and stale-token rejection.
+The feature branch now includes a PostgreSQL queue adapter, a PostgreSQL TaskStore with atomic task + queue submission, and a pool factory that reads environment configuration without logging credentials. Live CI verifies persistence/reload, transaction rollback, concurrent claims, expired-lease reclaim, and stale-token rejection.
 
 Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch.
 
@@ -22,23 +22,24 @@ Planning baseline and all 15 agent profiles remain on `main`. Runtime implementa
 - Task state machine/service, ordered audit events, checkpoints, and single-process JSON persistence with optimistic version checks.
 - In-memory queue and PostgreSQL queue adapter with idempotency rules and worker leases.
 - PostgreSQL TaskStore with optimistic concurrency, transactional history writes, and atomic task + queue submission.
-- Run #196 passed: 46 unit tests, four live PostgreSQL integration tests, typecheck, build, lint, dependency audit gate, and PostgreSQL schema checks.
+- Environment-driven PostgreSQL pool factory with input validation and optional certificate-verified SSL.
+- Run #205 passed: 50 unit tests, four live PostgreSQL integration tests, typecheck, build, lint, dependency audit gate, and PostgreSQL schema checks.
 
 ## Important limitations
 
 - CI used an ephemeral PostgreSQL service; no production database is provisioned.
-- No backups, recovery process, production connection configuration, or cloud deployment yet.
-- No real provider API adapters, live official pricing verification, Sirfaraz orchestration, Raza monitoring service, or mobile dashboard.
+- No production backups/recovery process, cloud deployment, real provider API adapters, or independent cost reconciliation.
+- Sirfaraz orchestration, the read-only Raza monitoring service, and mobile dashboard are not implemented.
 - Repository-wide formatting is not enforced in CI because 45 pre-existing files fail Prettier; a controlled cleanup is still needed.
 - No npm lockfile is committed yet; CI uses `npm install`.
 - A zero-cost app policy does not independently guarantee that an upstream provider will never bill.
 
 ## Next actions
 
-1. Add a supported PostgreSQL pool factory/configuration path without committed secrets.
-2. Commit a Node 22 lockfile and switch CI to `npm ci`.
-3. Document database backups and recovery before choosing a host.
-4. Evaluate database free tiers and durability before provisioning; no paid resources without explicit approval.
+1. Commit a Node 22 lockfile and switch CI to `npm ci`.
+2. Document backup/recovery and database operations before choosing a host.
+3. Evaluate database free tiers and durability before provisioning; no paid resources without explicit approval.
+4. Begin provider adapters only after official free-tier terms are independently verified.
 5. Keep PR #2 as draft and leave `main` unchanged until owner approval.
 
 ## Truth standard
