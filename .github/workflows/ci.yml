@@ -18,6 +18,11 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Dependency security summary
+        shell: bash
+        run: |
+          npm audit --json > npm-audit-report.json || true
+          node -e 'const a=require("./npm-audit-report.json"); const v=a.metadata?.vulnerabilities ?? {}; console.log("Dependency audit summary:", JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities ?? {})) console.log(`${item.severity}: ${name} (direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)})`);'
       - name: Typecheck
         run: npm run typecheck
       - name: Test
@@ -26,3 +31,5 @@ jobs:
         run: npm run build
       - name: Lint
         run: npm run lint
+      - name: Format check
+        run: npm run format:check
