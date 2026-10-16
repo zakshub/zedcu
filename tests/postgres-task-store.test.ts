@@ -66,6 +66,58 @@ describe("PostgresTaskStore", () => {
     expect(client.released).toBe(true);
   });
 
+  it("creates task, initial audit event, and queue row in one transaction", async () => {
+    const client = new FakeClient((text) => {
+      if (text.startsWith("SELECT task_id, idempotency_key")) {
+        return { rows: [], rowCount: 0 };
+      }
+      if (text.startsWith("INSERT INTO zedcu_task_queue")) {
+        return {
+          rows: [{
+            task_id: "task-1",
+            idempotency_key: "request-key",
+            enqueued_at: "2026-10-16T10:00:00.000Z",
+            attempts: 0
+          }],
+          rowCount: 1
+        };
+      }
+      return { rows: [], rowCount: 1 };
+    });
+    const store = new PostgresTaskStore(poolFor(client));
+
+    const queued = await store.createQueued(task, "request-key");
+
+    expect(queued).toMatchObject({
+      taskId: "task-1",
+      idempotencyKey: "request-key",
+      attempts: 0
+    });
+    expect(client.calls[0]).toBe("BEGIN");
+    expect(client.calls.some((call) => call.startsWith("INSERT INTO zedcu_tasks"))).toBe(true);
+    expect(client.calls.some((call) => call.startsWith("INSERT INTO zedcu_task_audit_events"))).toBe(true);
+    expect(client.calls.some((call) => call.startsWith("INSERT INTO zedcu_task_queue"))).toBe(true);
+    expect(client.calls.at(-1)).toBe("COMMIT");
+    expect(client.released).toBe(true);
+  });
+
+  it("rolls back task creation if queue insertion conflicts", async () => {
+    const duplicateError = Object.assign(new Error("duplicate key"), { code: "23505" });
+    const client = new FakeClient((text) => {
+      if (text.startsWith("SELECT task_id, idempotency_key")) {
+        return { rows: [], rowCount: 0 };
+      }
+      if (text.startsWith("INSERT INTO zedcu_task_queue")) throw duplicateError;
+      return { rows: [], rowCount: 1 };
+    });
+    const store = new PostgresTaskStore(poolFor(client));
+
+    await expect(store.createQueued(task, "request-key")).rejects.toThrow(TaskConflictError);
+    expect(client.calls).toContain("ROLLBACK");
+    expect(client.calls).not.toContain("COMMIT");
+    expect(client.released).toBe(true);
+  });
+
   it("rejects a stale optimistic version and rolls back", async () => {
     const client = new FakeClient((text) => {
       if (text.startsWith("UPDATE zedcu_tasks")) return { rows: [], rowCount: 0 };
