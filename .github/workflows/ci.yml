@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           npm audit --json > npm-audit-report.json || true
-          node -e 'const a=require("./npm-audit-report.json"); const v=a.metadata?.vulnerabilities ?? {}; console.log("Dependency audit summary:", JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities ?? {})) console.log(`${item.severity}: ${name} (direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)})`);'
+          node -e 'const fs=require("node:fs"); let a; try { a=JSON.parse(fs.readFileSync("npm-audit-report.json","utf8")); } catch { console.log("Dependency audit report unavailable; inspect npm audit step output."); process.exit(0); } const v=a.metadata?.vulnerabilities ?? {}; console.log("Dependency audit summary:", JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities ?? {})) console.log(`${item.severity}: ${name} (direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)})`);'
       - name: Typecheck
         run: npm run typecheck
       - name: Test
