@@ -1,7 +1,7 @@
 import type { TaskCheckpoint, TaskRecord, TaskStore, TaskAuditEvent } from "./task-record.js";
 import { TaskConflictError } from "./json-task-store.js";
 import type { TaskState } from "./task-state.js";
-import type { SqlClient, SqlPool, SqlQueryResult } from "./postgres-task-queue.js";
+import type { SqlClient, SqlPool } from "./postgres-task-queue.js";
 
 interface TaskRow {
   id: string;
