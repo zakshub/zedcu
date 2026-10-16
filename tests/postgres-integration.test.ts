@@ -1,13 +1,14 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
-import { Pool } from "pg";
+import { createPostgresPool } from "../src/tasks/postgres-pool.js";
 import { PostgresTaskQueue } from "../src/tasks/postgres-task-queue.js";
 import { PostgresTaskStore } from "../src/tasks/postgres-task-store.js";
+import { TaskService } from "../src/tasks/task-service.js";
 import { QueueConflictError } from "../src/tasks/task-queue.js";
 import { TaskConflictError } from "../src/tasks/json-task-store.js";
 import type { TaskRecord } from "../src/tasks/task-record.js";
 
-const pool = new Pool();
+const pool = createPostgresPool();
 const store = new PostgresTaskStore(pool);
 const queue = new PostgresTaskQueue(pool);
 const createdTaskIds: string[] = [];
@@ -43,17 +44,19 @@ describe("PostgreSQL persistence integration", () => {
     await pool.end();
   });
 
-  it("persists and reloads a queued task and its audit history", async () => {
-    const task = newTask();
-    const queued = await store.createQueued(task, randomUUID());
+  it("submits through TaskService and reloads the queued task and audit history", async () => {
+    const taskId = randomUUID();
+    createdTaskIds.push(taskId);
+    const service = new TaskService(store, { createId: () => taskId });
+    const task = await service.submit("PostgreSQL integration test task", randomUUID());
     const loaded = await store.get(task.id);
 
-    expect(queued.taskId).toBe(task.id);
+    expect(task.id).toBe(taskId);
     expect(loaded).toMatchObject({
       id: task.id,
       request: task.request,
       state: "queued",
-      version: 0,
+      version: 1,
       events: [{ sequence: 1, type: "created", toState: "queued" }]
     });
 
