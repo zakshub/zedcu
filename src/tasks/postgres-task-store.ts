@@ -79,20 +79,7 @@ export class PostgresTaskStore implements TaskStore {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
-      await client.query(
-        `INSERT INTO zedcu_tasks
-          (id, request, state, created_at, updated_at, version, last_error)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [
-          task.id,
-          task.request,
-          task.state,
-          new Date(task.createdAt),
-          new Date(task.updatedAt),
-          task.version,
-          task.lastError ?? null
-        ]
-      );
+      await this.insertTask(client, task);
       for (const checkpoint of task.checkpoints) {
         await this.insertCheckpoint(client, task.id, checkpoint);
       }
@@ -103,6 +90,91 @@ export class PostgresTaskStore implements TaskStore {
     } catch (error) {
       await this.rollback(client);
       if (this.isUniqueViolation(error)) {
+        throw new TaskConflictError(`Task '${task.id}' already exists or has duplicate history sequence numbers.`);
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Atomically creates the task, its initial checkpoints/audit history, and its
+   * durable queue row. Use this for new submissions instead of separate create()
+   * and queue.enqueue() calls.
+   */
+  async createQueued(task: TaskRecord, idempotencyKey: string): Promise<{
+    taskId: string;
+    idempotencyKey: string;
+    enqueuedAt: string;
+    attempts: number;
+  }> {
+    if (!idempotencyKey.trim()) throw new Error("Idempotency key cannot be empty.");
+    const client = await this.pool.connect();
+    let insertingQueueRow = false;
+    try {
+      await client.query("BEGIN");
+      const existing = await client.query<{
+        task_id: string;
+        idempotency_key: string;
+        enqueued_at: Date | string;
+        attempts: number;
+      }>(
+        `SELECT task_id, idempotency_key, enqueued_at, attempts
+         FROM zedcu_task_queue
+         WHERE task_id = $1 OR idempotency_key = $2
+         FOR UPDATE`,
+        [task.id, idempotencyKey]
+      );
+      const existingRow = existing.rows[0];
+      if (existingRow) {
+        if (existingRow.task_id !== task.id || existingRow.idempotency_key !== idempotencyKey) {
+          throw new TaskConflictError("Task ID or idempotency key already belongs to a different submission.");
+        }
+        await client.query("COMMIT");
+        return {
+          taskId: existingRow.task_id,
+          idempotencyKey: existingRow.idempotency_key,
+          enqueuedAt: toIso(existingRow.enqueued_at),
+          attempts: Number(existingRow.attempts)
+        };
+      }
+
+      await this.insertTask(client, task);
+      for (const checkpoint of task.checkpoints) {
+        await this.insertCheckpoint(client, task.id, checkpoint);
+      }
+      for (const event of task.events) {
+        await this.insertEvent(client, task.id, event);
+      }
+
+      insertingQueueRow = true;
+      const queued = await client.query<{
+        task_id: string;
+        idempotency_key: string;
+        enqueued_at: Date | string;
+        attempts: number;
+      }>(
+        `INSERT INTO zedcu_task_queue (task_id, idempotency_key, status, enqueued_at)
+         VALUES ($1, $2, 'queued', $3)
+         RETURNING task_id, idempotency_key, enqueued_at, attempts`,
+        [task.id, idempotencyKey, new Date(task.createdAt)]
+      );
+      const row = queued.rows[0];
+      if (!row) throw new Error("Database did not return the created queue row.");
+      await client.query("COMMIT");
+      return {
+        taskId: row.task_id,
+        idempotencyKey: row.idempotency_key,
+        enqueuedAt: toIso(row.enqueued_at),
+        attempts: Number(row.attempts)
+      };
+    } catch (error) {
+      await this.rollback(client);
+      if (this.isUniqueViolation(error)) {
+        if (insertingQueueRow) {
+          throw new TaskConflictError("Idempotency key or task ID was concurrently submitted.");
+        }
         throw new TaskConflictError(`Task '${task.id}' already exists or has duplicate history sequence numbers.`);
       }
       throw error;
@@ -228,6 +300,23 @@ export class PostgresTaskStore implements TaskStore {
     } finally {
       client.release();
     }
+  }
+
+  private async insertTask(client: SqlClient, task: TaskRecord): Promise<void> {
+    await client.query(
+      `INSERT INTO zedcu_tasks
+        (id, request, state, created_at, updated_at, version, last_error)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        task.id,
+        task.request,
+        task.state,
+        new Date(task.createdAt),
+        new Date(task.updatedAt),
+        task.version,
+        task.lastError ?? null
+      ]
+    );
   }
 
   private async insertCheckpoint(
