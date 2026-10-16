@@ -8,6 +8,9 @@
 
 ## Current baseline
 
+**Work resumed:** 2026-10-16. OmniRoute-based external audit is intentionally deferred. The queue test suite was made deterministic by passing explicit test timestamps to lease acknowledgement/release checks, and a regression test was added to reject release after lease expiry. These changes are committed on this feature branch; CI evidence for the newest commit is still pending and the changes are not yet marked verified.
+
+
 Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch. CI status must be checked against the latest commit before calling this slice verified.
 
 ## Implemented in the feature branch
