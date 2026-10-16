@@ -56,6 +56,10 @@ describe("PostgreSQL persistence integration", () => {
       version: 0,
       events: [{ sequence: 1, type: "created", toState: "queued" }]
     });
+
+    const lease = await queue.claim("integration-worker-persist", 30_000);
+    expect(lease?.taskId).toBe(task.id);
+    await queue.acknowledge(task.id, lease?.leaseToken ?? "");
   });
 
   it("rolls back task creation if its audit history violates a database constraint", async () => {
