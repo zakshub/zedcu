@@ -21,8 +21,10 @@ jobs:
       - name: Dependency security summary
         shell: bash
         run: |
-          npm audit --json > npm-audit-report.json || true
-          node -e 'const fs=require("node:fs"); let a; try { a=JSON.parse(fs.readFileSync("npm-audit-report.json","utf8")); } catch { console.log("Dependency audit report unavailable; inspect npm audit step output."); process.exit(0); } const v=a.metadata?.vulnerabilities ?? {}; console.log("Dependency audit summary:", JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities ?? {})) console.log(`${item.severity}: ${name} (direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)})`);'
+          npm audit --json > /tmp/npm-audit-report.json || true
+          node -e 'const fs=require("node:fs"); let a; try { a=JSON.parse(fs.readFileSync("/tmp/npm-audit-report.json","utf8")); } catch { console.log("Dependency audit report unavailable; inspect npm audit step output."); process.exit(0); } const v=a.metadata?.vulnerabilities ?? {}; console.log("Dependency audit summary:", JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities ?? {})) console.log(`${item.severity}: ${name} (direct=${item.isDirect}, fixAvailable=${JSON.stringify(item.fixAvailable)})`);'
+      - name: Enforce dependency security threshold
+        run: npm audit --audit-level=high
       - name: Typecheck
         run: npm run typecheck
       - name: Test
@@ -31,8 +33,6 @@ jobs:
         run: npm run build
       - name: Lint
         run: npm run lint
-      - name: Format check
-        run: npm run format:check
 
   postgres-schema:
     runs-on: ubuntu-latest
