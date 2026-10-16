@@ -33,3 +33,44 @@ jobs:
         run: npm run lint
       - name: Format check
         run: npm run format:check
+
+  postgres-schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: zedcu_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zedcu_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: zedcu_test
+      PGUSER: postgres
+      PGPASSWORD: ci-only-password
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+      - name: Apply migration
+        run: psql -v ON_ERROR_STOP=1 -f migrations/001_durable_task_queue.sql
+      - name: Verify migration is idempotent
+        run: psql -v ON_ERROR_STOP=1 -f migrations/001_durable_task_queue.sql
+      - name: Assert schema and migration marker
+        shell: bash
+        run: |
+          table_count="$(psql -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name LIKE 'zedcu_%';")"
+          migration_count="$(psql -Atc "SELECT count(*) FROM zedcu_schema_migrations WHERE version = '001_durable_task_queue';")"
+          test "$table_count" = "5"
+          test "$migration_count" = "1"
