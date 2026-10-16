@@ -74,3 +74,26 @@ jobs:
           migration_count="$(psql -Atc "SELECT count(*) FROM zedcu_schema_migrations WHERE version = '001_durable_task_queue';")"
           test "$table_count" = "5"
           test "$migration_count" = "1"
+      - name: Verify idempotency and lease constraints
+        shell: bash
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          INSERT INTO zedcu_tasks (id, request, state, created_at, updated_at)
+          VALUES
+            ('ci-task-1', 'schema CI test', 'queued', now(), now()),
+            ('ci-task-2', 'schema CI test duplicate', 'queued', now(), now());
+          INSERT INTO zedcu_task_queue (task_id, idempotency_key, status)
+          VALUES ('ci-task-1', 'ci-idempotency-key', 'queued');
+          SQL
+          if psql -v ON_ERROR_STOP=1 -c "INSERT INTO zedcu_task_queue (task_id, idempotency_key, status) VALUES ('ci-task-2', 'ci-idempotency-key', 'queued');" >/tmp/zedcu-duplicate.log 2>&1; then
+            echo "ERROR: duplicate idempotency key was accepted"
+            exit 1
+          else
+            echo "Duplicate idempotency key correctly rejected"
+          fi
+          if psql -v ON_ERROR_STOP=1 -c "INSERT INTO zedcu_task_queue (task_id, idempotency_key, status) VALUES ('ci-task-2', 'ci-invalid-lease', 'leased');" >/tmp/zedcu-lease.log 2>&1; then
+            echo "ERROR: lease without ownership fields was accepted"
+            exit 1
+          else
+            echo "Incomplete lease correctly rejected"
+          fi
