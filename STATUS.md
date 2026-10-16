@@ -8,9 +8,9 @@
 
 ## Current baseline
 
-GitHub Actions run #205 passed both jobs on commit `0ecbaa215e56a63f395585d6ec12516f013d05a5`. The main checks passed typecheck, 50 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 job passed migration/schema checks and four live integration tests.
+GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The main checks passed typecheck, 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 job passed migration/schema checks and four live integration tests.
 
-The feature branch now includes a PostgreSQL queue adapter, a PostgreSQL TaskStore with atomic task + queue submission, and a pool factory that reads environment configuration without logging credentials. Live CI verifies persistence/reload, transaction rollback, concurrent claims, expired-lease reclaim, and stale-token rejection.
+The feature branch includes a PostgreSQL queue adapter, a PostgreSQL TaskStore with atomic task + queue submission, and a pool factory that reads environment configuration without logging credentials. `TaskService.submit()` uses the atomic store capability and refuses to create a task when the selected store cannot enqueue it atomically.
 
 Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch.
 
@@ -23,7 +23,7 @@ Planning baseline and all 15 agent profiles remain on `main`. Runtime implementa
 - In-memory queue and PostgreSQL queue adapter with idempotency rules and worker leases.
 - PostgreSQL TaskStore with optimistic concurrency, transactional history writes, and atomic task + queue submission.
 - Environment-driven PostgreSQL pool factory with input validation and optional certificate-verified SSL.
-- Run #205 passed: 50 unit tests, four live PostgreSQL integration tests, typecheck, build, lint, dependency audit gate, and PostgreSQL schema checks.
+- Run #215 passed: 51 unit tests, four live PostgreSQL integration tests, typecheck, build, lint, dependency audit gate, and PostgreSQL schema checks.
 
 ## Important limitations
 
