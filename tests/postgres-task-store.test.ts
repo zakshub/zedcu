@@ -14,9 +14,10 @@ class FakeClient implements SqlClient {
 
   async query<Row = Record<string, unknown>>(
     text: string,
-    _values: readonly unknown[] = []
+    values: readonly unknown[] = []
   ): Promise<SqlQueryResult<Row>> {
     this.calls.push(text);
+    void values;
     const result = this.respond(text);
     return { rows: result.rows as Row[], rowCount: result.rowCount };
   }
