@@ -8,9 +8,9 @@
 
 ## Current baseline
 
-Work is continuing on the feature branch. The queue test suite has deterministic timestamps and a regression test rejecting release after lease expiry. A PostgreSQL schema foundation and a transaction/lease design note were added for durable tasks, checkpoints, audit events, idempotency keys, and worker leases. CI now has a PostgreSQL 16 service job that applies the migration twice and checks the resulting schema.
+Work is continuing on the feature branch. The queue test suite has deterministic timestamps and a regression test rejecting release after lease expiry. A PostgreSQL schema foundation and a transaction/lease design note were added for durable tasks, checkpoints, audit events, idempotency keys, and worker leases. CI now has a PostgreSQL 16 service job that applies the migration twice and checks schema tables, migration tracking, duplicate idempotency keys, and incomplete lease records.
 
-**Verification limitation:** the GitHub connector has not returned a workflow run or combined status for the latest commit, so the new schema job is configured but not yet confirmed passing. The local environment could not clone GitHub due to DNS resolution failure. Do not treat the newest queue/schema changes as tested or production-ready until CI succeeds.
+**Verification limitation:** the GitHub connector has not returned a workflow run or combined status for the latest commit, so the new schema job is configured but not confirmed passing. The local environment could not clone GitHub due to DNS resolution failure. Do not treat the newest queue/schema changes as tested or production-ready until CI succeeds.
 
 Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch.
 
@@ -22,12 +22,12 @@ Planning baseline and all 15 agent profiles remain on `main`. Runtime implementa
 - Task state machine/service, ordered audit events, checkpoints, and single-process JSON persistence with optimistic version checks.
 - Queue interface plus an in-memory contract/test adapter for idempotent enqueue, worker leases, expiry/reclaim, acknowledgement, retry release, and attempt counts.
 - PostgreSQL schema proposal and transaction/lease design; no database adapter or provisioned database yet.
-- Unit tests and GitHub Actions checks for typecheck, tests, build, lint, formatting, dependency audit summary, and PostgreSQL migration/idempotency validation; newest results pending.
+- Unit tests and GitHub Actions checks for typecheck, tests, build, lint, formatting, dependency audit summary, and PostgreSQL schema/constraint validation; latest results pending.
 
 ## Important limitations
 
 - The JSON store and in-memory queue are not safe production infrastructure for multiple cloud workers; queue state is lost on process restart.
-- The SQL migration has not yet been applied to a real PostgreSQL instance or validated by a passing CI run.
+- The SQL migration has not yet been confirmed by a passing CI run or applied to a production database.
 - Task and queue creation are not yet one atomic transaction in runtime code.
 - Checkpoints store summaries and artifact paths, not workspace snapshots.
 - No real provider API adapters, live official pricing verification, Sirfaraz orchestration, Raza monitoring service, cloud deployment, or mobile dashboard.
