@@ -24,7 +24,7 @@ describe("InMemoryTaskQueue contract adapter", () => {
     const reclaimed = await queue.claim("worker-b", 1_000, instant(2));
     expect(reclaimed?.attempts).toBe(2);
     expect(reclaimed?.workerId).toBe("worker-b");
-    await expect(queue.acknowledge("task-1", first?.leaseToken ?? "")).rejects.toThrow(QueueConflictError);
+    await expect(queue.acknowledge("task-1", first?.leaseToken ?? "", instant(2))).rejects.toThrow(QueueConflictError);
     await queue.acknowledge("task-1", reclaimed?.leaseToken ?? "", instant(2));
     expect(await queue.claim("worker-c", 1_000, instant(3))).toBeNull();
   });
@@ -37,6 +37,15 @@ describe("InMemoryTaskQueue contract adapter", () => {
     const retry = await queue.claim("worker-b", 1_000, instant(1));
     expect(retry?.attempts).toBe(2);
     await expect(queue.claim("worker-c", 0, instant(2))).rejects.toThrow("positive finite");
+  });
+
+  it("rejects release when a lease has expired", async () => {
+    const queue = new InMemoryTaskQueue();
+    await queue.enqueue("task-expired", "request-expired", instant(0));
+    const lease = await queue.claim("worker-a", 1_000, instant(0));
+    await expect(
+      queue.release("task-expired", lease?.leaseToken ?? "", instant(1))
+    ).rejects.toThrow(QueueConflictError);
   });
 
   it("validates required identifiers", async () => {
