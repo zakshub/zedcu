@@ -1,6 +1,6 @@
 # ZEDCU Status
 
-**Date:** 2026-10-15  
+**Date:** 2026-10-16  
 **Repository:** `zakshub/zedcu`  
 **Default branch:** `main`  
 **Active implementation branch:** `feat/phase-1-runtime-baseline`  
@@ -8,10 +8,11 @@
 
 ## Current baseline
 
-**Work resumed:** 2026-10-16. OmniRoute-based external audit is intentionally deferred. The queue test suite was made deterministic by passing explicit test timestamps to lease acknowledgement/release checks, and a regression test was added to reject release after lease expiry. These changes are committed on this feature branch; CI evidence for the newest commit is still pending and the changes are not yet marked verified.
+Work is continuing on the feature branch. The queue test suite has deterministic timestamps and a regression test rejecting release after lease expiry. A PostgreSQL schema foundation and a transaction/lease design note were added for durable tasks, checkpoints, audit events, idempotency keys, and worker leases.
 
+**Verification limitation:** the latest commit has no workflow run or combined status returned by the GitHub connector. The local environment could not clone GitHub due to DNS resolution failure. Do not treat the newest queue/schema changes as tested or production-ready until CI and PostgreSQL validation succeed.
 
-Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch. CI status must be checked against the latest commit before calling this slice verified.
+Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch.
 
 ## Implemented in the feature branch
 
@@ -20,22 +21,24 @@ Planning baseline and all 15 agent profiles remain on `main`. Runtime implementa
 - Bounded fallback runner with attempt tracking, timeout, cooperative cancellation, and fail-closed cost handling.
 - Task state machine/service, ordered audit events, checkpoints, and single-process JSON persistence with optimistic version checks.
 - Queue interface plus an in-memory contract/test adapter for idempotent enqueue, worker leases, expiry/reclaim, acknowledgement, retry release, and attempt counts.
-- Unit tests and GitHub Actions checks for typecheck, tests, build, and lint.
+- PostgreSQL schema proposal and transaction/lease design; no database adapter or provisioned database yet.
+- Unit tests and GitHub Actions checks for typecheck, tests, build, lint, formatting, and dependency audit summary; newest results pending.
 
 ## Important limitations
 
 - The JSON store and in-memory queue are not safe production infrastructure for multiple cloud workers; queue state is lost on process restart.
-- Task and queue creation are not one atomic transaction; idempotency records are not durable.
+- The SQL migration has not yet been applied to a real PostgreSQL instance or validated with integration tests.
+- Task and queue creation are not yet one atomic transaction in runtime code.
 - Checkpoints store summaries and artifact paths, not workspace snapshots.
 - No real provider API adapters, live official pricing verification, Sirfaraz orchestration, Raza monitoring service, cloud deployment, or mobile dashboard.
 - A zero-cost app policy does not independently guarantee that an upstream provider will never bill.
 
 ## Next actions
 
-1. Verify CI on the latest branch commit.
+1. Verify CI on the latest branch commit and fix failures.
 2. Generate and commit a lockfile using a clean Node 22 environment.
-3. Evaluate database/queue free tiers and durability before choosing a production adapter.
-4. Implement durable queue/idempotency transactions and crash-recovery integration tests.
+3. Validate the migration and implement transactional PostgreSQL storage with concurrency/crash-recovery tests.
+4. Evaluate database free tiers and durability before choosing a host; no paid resources without explicit approval.
 5. Keep PR #2 as draft and leave `main` unchanged until owner approval.
 
 ## Truth standard
