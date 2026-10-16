@@ -47,4 +47,12 @@ describe("TaskService", () => {
     const task = await service.create("valid");
     await expect(service.checkpoint(task.id, " ")).rejects.toThrow("cannot be empty");
   });
+
+  it("fails closed when a store cannot atomically enqueue submissions", async () => {
+    const { store, service } = await setup();
+    await expect(service.submit("valid request", "request-key")).rejects.toThrow(
+      "does not support atomic submission"
+    );
+    expect(await store.get("task-service-1")).toBeNull();
+  });
 });
