@@ -2,7 +2,7 @@
 
 Updated: 2026-10-16
 
-The feature branch includes a queue contract and in-memory test adapter. A PostgreSQL schema foundation has been added for durable tasks, checkpoints, ordered audit events, idempotency keys, and worker leases. A separate CI job now applies the migration twice to a temporary PostgreSQL 16 service and checks that schema objects and the migration marker exist. The job has not yet been observed passing.
+The feature branch includes a queue contract and in-memory test adapter. A PostgreSQL schema foundation has been added for durable tasks, checkpoints, ordered audit events, idempotency keys, and worker leases. A separate CI job applies the migration twice to a temporary PostgreSQL 16 service and checks schema objects, the migration marker, duplicate idempotency-key rejection, and rejection of incomplete lease records. This job has not yet been observed passing.
 
 ## Implemented in this branch (verify CI on latest commit)
 
@@ -19,11 +19,11 @@ The feature branch includes a queue contract and in-memory test adapter. A Postg
 - PostgreSQL schema migration for tasks, checkpoints, ordered audit events, durable idempotency keys, queue status, and lease ownership constraints.
 - PostgreSQL transaction/lease design with required atomic create, claim, acknowledge/release, optimistic concurrency, and crash-recovery acceptance tests.
 - Unit tests for routing policy, fallback, task transitions, persistence conflicts, checkpoints, queue idempotency, and lease behavior.
-- GitHub Actions workflow for typecheck, tests, build, lint, format check, dependency audit summary, and PostgreSQL migration/idempotency validation; safe environment-variable example without credentials.
+- GitHub Actions workflow for typecheck, tests, build, lint, format check, dependency audit summary, and PostgreSQL migration/schema-constraint validation; safe environment-variable example without credentials.
 
 ## Important limitations
 
-The JSON task store and in-memory queue are development/test adapters. The new SQL migration is only a schema foundation: no PostgreSQL adapter, provisioned database, connection pooling, backups, or recovery process exists yet. The migration has not been applied to a real production database. The new PostgreSQL CI job is configured but its result is still pending.
+The JSON task store and in-memory queue are development/test adapters. The new SQL migration is only a schema foundation: no PostgreSQL adapter, provisioned database, connection pooling, backups, or recovery process exists yet. The migration has not been applied to a production database. The new PostgreSQL CI job is configured but its result is still pending.
 
 Task checkpoints currently store summaries and artifact paths, not workspace snapshots or automated restore instructions. Provider route eligibility relies on supplied evidence metadata; no live provider adapters or official pricing verification are wired. A provider-reported zero cost is not independent billing proof.
 
@@ -44,15 +44,15 @@ Task checkpoints currently store summaries and artifact paths, not workspace sna
 - Fixed queue test nondeterminism by passing explicit timestamps to acknowledgement/release operations.
 - Added a regression test proving an expired lease cannot be released.
 - Added `migrations/001_durable_task_queue.sql` and `docs/POSTGRES_TASK_QUEUE_DESIGN.md`.
-- Added a PostgreSQL 16 CI job to apply the migration twice and assert the five schema tables and one migration marker.
+- Added a PostgreSQL 16 CI job to apply the migration twice, assert five schema tables and one migration marker, reject duplicate idempotency keys, and reject incomplete lease records.
 - The GitHub connector's workflow lookup returned no run/status for the latest commit; no passing result is claimed. The local clone attempt failed because GitHub DNS did not resolve in this execution environment.
 
 ## Next actions
 
 1. Check the actual GitHub Actions page/run for the latest feature-branch push; fix any reported workflow failures.
 2. Obtain a clean Node 22 environment to generate a lockfile and run formatting/typecheck/tests/build/lint.
-3. Extend PostgreSQL CI from schema application to transaction-level integration tests for atomic task creation, duplicate submissions, lease reclaim, and stale tokens.
-4. Implement the PostgreSQL task store and queue adapter only after the integration tests can be run.
+3. Extend PostgreSQL CI to transaction-level integration tests for atomic task creation, concurrent submissions, lease reclaim, and stale tokens.
+4. Implement the PostgreSQL task store and queue adapter only when integration tests can be run against PostgreSQL.
 5. Compare database/queue candidates against current free-tier limits and durability before selecting a host; no paid resource without explicit approval.
 6. Verify official provider terms before enabling real routes.
 
