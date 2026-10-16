@@ -25,7 +25,7 @@ describe("InMemoryTaskQueue contract adapter", () => {
     expect(reclaimed?.attempts).toBe(2);
     expect(reclaimed?.workerId).toBe("worker-b");
     await expect(queue.acknowledge("task-1", first?.leaseToken ?? "")).rejects.toThrow(QueueConflictError);
-    await queue.acknowledge("task-1", reclaimed?.leaseToken ?? "");
+    await queue.acknowledge("task-1", reclaimed?.leaseToken ?? "", instant(2));
     expect(await queue.claim("worker-c", 1_000, instant(3))).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe("InMemoryTaskQueue contract adapter", () => {
     const queue = new InMemoryTaskQueue();
     await queue.enqueue("task-1", "request-1", instant(0));
     const lease = await queue.claim("worker-a", 1_000, instant(0));
-    await queue.release("task-1", lease?.leaseToken ?? "");
+    await queue.release("task-1", lease?.leaseToken ?? "", instant(0));
     const retry = await queue.claim("worker-b", 1_000, instant(1));
     expect(retry?.attempts).toBe(2);
     await expect(queue.claim("worker-c", 0, instant(2))).rejects.toThrow("positive finite");
