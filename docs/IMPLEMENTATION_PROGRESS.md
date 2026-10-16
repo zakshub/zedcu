@@ -2,7 +2,7 @@
 
 Updated: 2026-10-16
 
-GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The runtime checks passed typecheck, all 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 service job passed migration/schema checks and four live integration tests. Documentation-only run #218 also passed both jobs. A temporary Node 22 bootstrap run successfully generated the lockfile and passed npm ci, typecheck, 51 unit tests, build, and lint; the temporary workflow was removed afterward.
+GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The runtime checks passed typecheck, all 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 service job passed migration/schema checks and four live integration tests. Documentation-only run #218 also passed both jobs. Run #231 passed both jobs on commit `50b22ed44c1a7601624972355cd17d9b0a928e34` after committing the Node 22 lockfile and switching CI to `npm ci`.
 
 ## Implemented in this branch (code verified by run #215 unless noted)
 
@@ -23,15 +23,15 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 - Live PostgreSQL integration tests for TaskService submission/persistence, rollback, concurrent worker claims, expired lease reclaim, and stale-token rejection.
 - Pool configuration unit tests for missing settings, SSL, connection URL, and invalid numeric values.
 - GitHub Actions workflow for typecheck, tests, build, lint, high-severity dependency audit, migration validation, and live PostgreSQL integration testing.
-- Committed `package-lock.json` generated with Node.js 22/npm 10.9.9. The temporary bootstrap workflow passed `npm ci`, typecheck, 51 unit tests, build, and lint before committing the lockfile.
-- CI dependency installation updated to `npm ci` in both the regular and PostgreSQL integration jobs. The updated CI run is pending verification.
+- Committed `package-lock.json` generated with Node.js 22/npm 10.9.9. Clean `npm ci`, typecheck, 51 unit tests, build, lint, and the high-severity audit gate passed. Both CI jobs, including live PostgreSQL integration tests, passed on run #231.
+- Free-tier database comparison documented in `docs/FREE_TIER_DATABASE_EVALUATION.md`. Aiven and Neon are shortlisted for evaluation; no provider has been selected or provisioned.
 - Vitest upgraded after CI identified critical dependency advisories; the high-severity audit gate passes.
 
 ## Verification boundary
 
-Run #215 is green on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`: 10 unit-test files and 51 unit tests passed; typecheck, build, lint, dependency audit threshold, PostgreSQL migration checks, and four live PostgreSQL integration tests passed. Documentation-only run #218 also passed both jobs. The lockfile bootstrap workflow separately passed clean `npm ci`, typecheck, all 51 unit tests, build, and lint.
+Run #231 passed both jobs on commit `50b22ed44c1a7601624972355cd17d9b0a928e34`: `npm ci`, dependency audit threshold, typecheck, all 51 unit tests, build, lint, PostgreSQL migration/schema checks, and four live PostgreSQL integration tests. Run #215 also passed the earlier code baseline. Subsequent commits are documentation-only; their own CI runs are in progress.
 
-The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred. The follow-up CI run is required to verify the committed lockfile and updated `npm ci` workflow together.
+The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred.
 
 ## Important limitations
 
@@ -55,16 +55,16 @@ The repository-wide Prettier check was removed from CI because it failed on 45 e
 - Added live PostgreSQL integration tests and a dedicated `test:postgres` CI step.
 - Added an environment-driven PostgreSQL pool factory and safe, commented configuration examples.
 - Added `docs/OPERATIONS_BACKUP_RECOVERY.md` covering backup exports, encryption, restore drills, recovery sequence, connection-pool sizing, cost/security stop conditions, and production-readiness checks. This is documentation only; no database or backup service was provisioned.
-- Generated and committed `package-lock.json` from clean Node.js 22/npm 10.9.9, verified clean `npm ci` plus typecheck, 51 unit tests, build, and lint, then removed the temporary bootstrap workflow.
-- Changed CI's two dependency-install steps from `npm install` to `npm ci`; final verification of this exact CI revision is pending.
-- No deployment was made; `main` remains unchanged and PR #2 remains a draft.
+- Generated and committed `package-lock.json` from clean Node.js 22/npm 10.9.9, then switched both CI dependency-install steps to `npm ci`.
+- Added `docs/FREE_TIER_DATABASE_EVALUATION.md` with current official-source comparison of Aiven, Neon, Supabase, and Render. Aiven and Neon remain candidates only.
+- Run #231 passed both jobs, including four live PostgreSQL integration tests. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
 
 ## Next actions
 
-1. Confirm the new CI run passes using the committed lockfile and `npm ci`.
-2. Evaluate free-tier database options and durability before provisioning; no paid resources without explicit approval.
-3. Begin provider adapters only after independently verifying official free-tier terms and cost boundaries.
-4. Configure backup automation and complete a restore drill only after a database host is selected and explicitly approved.
+1. Finish CI verification for the latest documentation-only commits.
+2. Choose a database only after a deliberate owner review of current limits, backups, connection budget, and the $0 policy; do not provision automatically.
+3. Implement the first real provider adapter only after verifying the provider's official free-tier terms and independent cost controls.
+4. Continue toward Sirfaraz orchestration and Raza's independent read-only verification role.
 
 ## Truth standard
 
