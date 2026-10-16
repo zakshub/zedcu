@@ -2,9 +2,9 @@
 
 Updated: 2026-10-16
 
-GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The runtime checks passed typecheck, all 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 service job passed migration/schema checks and four live integration tests.
+GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The runtime checks passed typecheck, all 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 service job passed migration/schema checks and four live integration tests. Documentation-only run #218 also passed both jobs.
 
-## Implemented in this branch (verified by run #215)
+## Implemented in this branch (code verified by run #215)
 
 - Strict TypeScript project baseline and npm scripts.
 - Provider request/response contracts and normalized failure categories.
@@ -27,19 +27,19 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 
 ## Verification boundary
 
-Run #215 is green on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`: 10 unit-test files and 51 unit tests passed; typecheck, build, lint, dependency audit threshold, PostgreSQL migration checks, and four live PostgreSQL integration tests passed.
+Run #215 is green on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`: 10 unit-test files and 51 unit tests passed; typecheck, build, lint, dependency audit threshold, PostgreSQL migration checks, and four live PostgreSQL integration tests passed. Documentation-only run #218 also passed both jobs.
 
-The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred. Documentation updates may trigger a separate CI run; the verification above applies to the exact tested code commit.
+The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred. Code verification applies to the tested code commit; run #218 verified the subsequent documentation-only changes.
 
 ## Important limitations
 
-No production database is provisioned, and there is no backup/recovery process, cloud deployment, or real provider API integration. A production application must configure its PostgreSQL pool using environment settings. A provider-reported zero cost is not independent billing proof.
+No production database is provisioned, and there is no scheduled/automated backup process, cloud deployment, or real provider API integration. A production application must configure its PostgreSQL pool using environment settings. A provider-reported zero cost is not independent billing proof. `docs/OPERATIONS_BACKUP_RECOVERY.md` now documents the required operator procedure and readiness checklist; it does not mean backups are configured or running.
 
 The repository-wide Prettier check was removed from CI because it failed on 45 existing baseline files, including agent profiles and docs. The `format:check` script remains available for a later controlled formatting pass; formatting is not currently a CI gate.
 
 ## Not implemented yet
 
-- Production database provisioning, backups, and disaster recovery.
+- Production database provisioning and tested automated backups/disaster recovery.
 - Real provider API adapters and independent cost/usage reconciliation.
 - Sirfaraz orchestration and specialist execution.
 - Separate read-only Raza monitoring service.
@@ -53,16 +53,17 @@ The repository-wide Prettier check was removed from CI because it failed on 45 e
 - Wired `TaskService.submit()` to the atomic store capability, with fail-closed behavior for stores that do not support atomic submission.
 - Added live PostgreSQL integration tests and a dedicated `test:postgres` CI step.
 - Added an environment-driven PostgreSQL pool factory and safe, commented configuration examples.
+- Added `docs/OPERATIONS_BACKUP_RECOVERY.md` covering backup exports, encryption, restore drills, recovery sequence, connection-pool sizing, cost/security stop conditions, and production-readiness checks. This is documentation only; no database or backup service was provisioned.
 - Fixed TypeScript and lint errors found during CI iterations.
 - Upgraded Vitest to the audit-recommended 5.0.5 line and enforced a high-severity audit threshold.
-- Run #215 passed both jobs: 51 unit tests and four live PostgreSQL integration tests. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
+- Run #215 passed both jobs: 51 unit tests and four live PostgreSQL integration tests. Documentation-only run #218 passed both jobs. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
 
 ## Next actions
 
 1. Generate and commit a lockfile from a clean Node 22 environment, then switch CI to `npm ci`.
-2. Add database backup, recovery, connection-limit, and operational runbooks before selecting a host.
-3. Evaluate free-tier database options and durability before provisioning; no paid resources without explicit approval.
-4. Begin provider adapters only after independently verifying official free-tier terms and cost boundaries.
+2. Evaluate free-tier database options and durability before provisioning; no paid resources without explicit approval.
+3. Begin provider adapters only after independently verifying official free-tier terms and cost boundaries.
+4. Configure backup automation and complete a restore drill only after a database host is selected and explicitly approved.
 
 ## Truth standard
 
