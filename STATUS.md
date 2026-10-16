@@ -8,37 +8,38 @@
 
 ## Current baseline
 
-A PostgreSQL queue adapter and focused contract tests have been added on the feature branch. In GitHub Actions run #169, the main checks job passed: TypeScript typecheck, all 42 unit tests, build, lint, and the high-severity dependency audit threshold. The PostgreSQL schema validation job was still in progress at the last check; full workflow success is not yet confirmed.
+GitHub Actions run #185 passed both jobs on commit `986293c46f2790868d1205bf0004050293242a1f`. The runtime checks passed typecheck, all 46 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 schema job also passed repeat migration, schema checks, duplicate idempotency-key rejection, and incomplete-lease rejection.
+
+A PostgreSQL queue adapter and PostgreSQL TaskStore adapter are now present. The TaskStore exposes `createQueued()`, which inserts the task, initial checkpoints/audit history, and durable queue entry in a single transaction. Adapter tests still use a fake SQL client; live PostgreSQL integration testing remains a gap.
 
 Planning baseline and all 15 agent profiles remain on `main`. Runtime implementation remains isolated on the feature branch.
 
 ## Implemented in the feature branch
 
 - Strict TypeScript baseline, provider contracts, gateway registry, capability-aware routing, and zero-spend route policy.
-- Gateway-neutral strategy for OmniRoute, OpenRouter, direct providers, and additional candidates; no real network adapters are connected.
+- Gateway-neutral strategy for OmniRoute, OpenRouter, direct providers, and additional candidates; no real provider network adapters are connected.
 - Bounded fallback runner with attempt tracking, timeout, cooperative cancellation, and fail-closed cost handling.
 - Task state machine/service, ordered audit events, checkpoints, and single-process JSON persistence with optimistic version checks.
-- In-memory queue adapter and PostgreSQL queue adapter with idempotency checks, leases, expired-lease reclamation, acknowledgement, and retry release.
-- PostgreSQL schema proposal and transaction/lease design; no database is provisioned and no PostgreSQL TaskStore exists yet.
-- CI main checks passed on run #169: typecheck, 42 tests, build, lint, and high-severity audit gate. PostgreSQL schema validation was still running.
-- Vitest upgraded after CI found critical dependency advisories; the updated audit gate passed.
+- In-memory queue and PostgreSQL queue adapter with idempotency rules and worker leases.
+- PostgreSQL TaskStore with optimistic concurrency, transaction-protected history, and atomic task + queue submission.
+- Run #185 passed: 9 test files, 46 tests, typecheck, build, lint, dependency audit gate, and PostgreSQL schema/constraint job.
 
 ## Important limitations
 
-- PostgreSQL queue adapter tests currently use a fake SQL client; live PostgreSQL CI checks the schema and constraints, not yet all adapter transaction behavior.
-- Task creation, queue insertion, and initial audit event are not yet atomic in runtime code.
-- No production database, backups, cloud deployment, real provider adapters, Sirfaraz orchestration, Raza monitoring service, or mobile dashboard.
+- PostgreSQL adapter tests use a fake SQL client; adapter transactions have not yet been exercised against the live PostgreSQL CI service.
+- No database is provisioned, and there are no backups, recovery process, or production connection configuration.
+- No real provider API adapters, live official pricing verification, Sirfaraz orchestration, Raza monitoring service, cloud deployment, or mobile dashboard.
 - Repository-wide formatting is not enforced in CI because 45 pre-existing files fail Prettier; a controlled cleanup is still needed.
+- No npm lockfile is committed yet; CI uses `npm install`.
 - A zero-cost app policy does not independently guarantee that an upstream provider will never bill.
 
 ## Next actions
 
-1. Confirm the PostgreSQL CI job and fix any failures.
-2. Implement PostgreSQL TaskStore and atomic task submission.
-3. Add PostgreSQL integration tests for rollback, duplicate submission, concurrent claims, and stale lease tokens.
-4. Commit a Node 22 lockfile and switch CI to `npm ci`.
-5. Evaluate database free tiers and durability before choosing a host; no paid resources without explicit approval.
-6. Keep PR #2 as draft and leave `main` unchanged until owner approval.
+1. Add live PostgreSQL integration tests for transaction rollback, concurrent submissions/claims, and stale lease tokens.
+2. Commit a Node 22 lockfile and switch CI to `npm ci`.
+3. Add a supported pool factory/configuration path without committed secrets.
+4. Evaluate database free tiers and durability before choosing a host; no paid resources without explicit approval.
+5. Keep PR #2 as draft and leave `main` unchanged until owner approval.
 
 ## Truth standard
 
