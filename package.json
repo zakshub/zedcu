@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/postgres-integration.test.ts",
+    "test:postgres": "vitest run tests/postgres-integration.test.ts",
     "test:watch": "vitest",
     "lint": "eslint .",
     "format:check": "prettier --check ."
