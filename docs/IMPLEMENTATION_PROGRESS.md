@@ -2,9 +2,9 @@
 
 Updated: 2026-10-16
 
-The feature branch now contains a PostgreSQL-backed queue adapter using a caller-supplied connection pool, plus focused tests for transactional claims and stale lease rejection. GitHub Actions run #169 reports the main checks job passing: typecheck, all 42 unit tests, build, lint, and the high-severity dependency audit threshold. The PostgreSQL schema validation job is still running, so the full workflow is not yet confirmed green.
+GitHub Actions run #185 passed both jobs on commit `986293c46f2790868d1205bf0004050293242a1f`: the runtime checks passed typecheck, all 46 unit tests, build, lint, and the high-severity dependency audit gate; the PostgreSQL 16 schema job passed migration re-application, schema checks, duplicate idempotency-key rejection, and incomplete-lease rejection.
 
-## Implemented in this branch (verify each latest CI run)
+## Implemented in this branch (latest successful CI run #185)
 
 - Strict TypeScript project baseline and npm scripts.
 - Provider request/response contracts and normalized failure categories.
@@ -15,49 +15,52 @@ The feature branch now contains a PostgreSQL-backed queue adapter using a caller
 - Bounded fallback runner with per-route attempt records, duplicate-route prevention, retryable-failure handling, per-request timeout, cooperative cancellation signal, and fail-closed rejection when zero cost is not explicitly reported.
 - Guarded task-state transitions, task records, ordered audit events, a storage interface, and a single-process JSON store with atomic replacement, optimistic version checks, and restart-read tests.
 - Task service for task creation, state transitions, numbered checkpoints, and audit events.
-- Queue contract and in-memory test adapter for idempotent enqueue, worker leases, expiry/reclaim, acknowledgement, retry release, and attempt tracking.
+- In-memory queue adapter for development/tests and PostgreSQL queue adapter with row-lock claims using `SKIP LOCKED`, lease expiry/reclaim, acknowledgement, and retry release.
 - PostgreSQL schema migration for tasks, checkpoints, ordered audit events, durable idempotency keys, queue status, and lease ownership constraints.
-- PostgreSQL queue adapter using a supplied SQL pool; claims use row locks with `SKIP LOCKED`, and acknowledgement/release require the current unexpired lease token.
-- Unit tests for routing policy, fallback, task transitions, JSON persistence conflicts, checkpoints, queue idempotency, in-memory lease behavior, and PostgreSQL queue SQL contract.
-- GitHub Actions workflow for typecheck, tests, build, lint, a high-severity dependency audit gate, and PostgreSQL migration/schema-constraint validation.
-- Updated Vitest to the audit-recommended patched major version; the current CI audit threshold passes.
+- PostgreSQL TaskStore adapter with optimistic version checks, transaction-protected task/history writes, and a `createQueued()` operation that inserts a task, its checkpoints/audit history, and queue row in one transaction.
+- Tests for atomic submission success/rollback, stale optimistic versions, queue lease claims, and stale lease acknowledgement using a fake SQL client.
+- GitHub Actions workflow for typecheck, tests, build, lint, high-severity dependency audit, and PostgreSQL schema/constraint checks.
+- Vitest upgraded after CI identified critical dependency advisories; the high-severity audit gate passes in the latest successful run.
+
+## Verification boundary
+
+Run #185 is green on commit `986293c46f2790868d1205bf0004050293242a1f`: 9 test files and 46 tests passed; typecheck, build, lint, dependency audit threshold, and the PostgreSQL schema job passed.
+
+The PostgreSQL adapter tests use a fake SQL client, not a live database connection. The PostgreSQL service job validates the migration and selected constraints, but does not yet execute the adapters against PostgreSQL. The latest documentation updates may trigger a separate CI run; the code-verification result above applies to the exact tested commit.
 
 ## Important limitations
 
-The PostgreSQL queue adapter is not yet paired with a PostgreSQL TaskStore or an atomic task-submission service. Its `enqueue()` expects the task row to exist already; task creation, queue insertion, and the creation audit event are not yet one transaction. Adapter tests use a fake SQL client, while a PostgreSQL 16 service job checks schema/migration constraints separately.
-
-No production database is provisioned, and there is no connection pool configuration, backups, recovery process, cloud deployment, or real provider API integration. The current CI run's PostgreSQL schema job is still pending. A provider-reported zero cost is not independent billing proof.
+No production database is provisioned, and there is no connection-pool configuration, backups, recovery process, cloud deployment, or real provider API integration. The application must supply a configured SQL pool to the PostgreSQL adapters. A provider-reported zero cost is not independent billing proof.
 
 The repository-wide Prettier check was removed from CI because it failed on 45 existing baseline files, including agent profiles and docs. The `format:check` script remains available for a later controlled formatting pass; formatting is not currently a CI gate.
 
 ## Not implemented yet
 
-- PostgreSQL TaskStore and atomic task + queue + audit submission transaction.
-- Real PostgreSQL integration tests for concurrent claims, duplicate submissions, stale tokens, and transaction rollback.
+- Live PostgreSQL integration tests for the adapters, concurrent submissions, concurrent claims, expired lease reclaim, and transaction rollback against the actual database.
 - Database provisioning, backups, and disaster recovery.
 - Real provider API adapters and independent cost/usage reconciliation.
 - Sirfaraz orchestration and specialist execution.
 - Separate read-only Raza monitoring service.
 - Authenticated GitHub automation, cloud deployment, mobile dashboard, and notifications.
-- Committed npm lockfile from a clean Node 22 environment.
+- Committed npm lockfile from a clean Node 22 environment; CI still uses `npm install`.
 
 ## Latest work (2026-10-16)
 
 - Added `migrations/001_durable_task_queue.sql` and `docs/POSTGRES_TASK_QUEUE_DESIGN.md`.
 - Added PostgreSQL 16 CI validation for repeatable migration, schema objects, unique idempotency keys, and lease ownership constraints.
-- Added `src/tasks/postgres-task-queue.ts` and `tests/postgres-task-queue.test.ts`.
-- Latest observed CI run #169: main checks passed (typecheck, 42 tests, build, lint, and high-severity audit gate); PostgreSQL schema job was still in progress at the last check.
-- The prior run identified three dependency advisories, including two critical Vitest-related findings. Vitest was upgraded to the audit-recommended 5.0.5 line, and the new high-severity audit gate passed in run #169.
-- Local clone remains unavailable in this execution environment due to GitHub DNS resolution failure; GitHub-hosted CI is being used for verification.
+- Added `src/tasks/postgres-task-queue.ts` and its tests.
+- Added `src/tasks/postgres-task-store.ts`, including atomic `createQueued()`, and rollback/concurrency tests.
+- Fixed the exact-optional-property type error and two lint errors identified by CI.
+- Upgraded Vitest to the audit-recommended 5.0.5 line and enforced a high-severity audit threshold.
+- Run #185 passed both jobs with 46 tests. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
 
 ## Next actions
 
-1. Confirm PostgreSQL schema job outcome and fix any failure.
-2. Add PostgreSQL TaskStore plus a single-transaction submission service.
-3. Add actual PostgreSQL integration tests for atomicity and concurrent lease handling.
-4. Commit a lockfile from the verified Node 22 environment and switch CI from `npm install` to `npm ci`.
-5. Evaluate current free-tier database options before provisioning; no paid resources without explicit approval.
-6. Verify official provider terms before enabling real routes.
+1. Add live PostgreSQL integration tests for adapter behavior and race conditions.
+2. Generate and commit a lockfile from a clean Node 22 environment, then switch CI to `npm ci`.
+3. Add a supported pool factory/configuration path with environment-based connection settings and no committed secrets.
+4. Evaluate database free tiers and durability before provisioning; no paid resources without explicit approval.
+5. Verify official provider terms before enabling real routes.
 
 ## Truth standard
 
