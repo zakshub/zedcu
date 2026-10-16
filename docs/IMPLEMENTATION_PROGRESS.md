@@ -1,6 +1,6 @@
 # Implementation Progress
 
-Updated: 2026-10-15
+Updated: 2026-10-16
 
 The feature branch now includes a queue contract and an in-memory test adapter for idempotency, worker leases, expiry/reclaim, acknowledgement, and retry release. This is contract-level progress, not durable or cloud-ready queue infrastructure.
 
@@ -33,6 +33,13 @@ Task checkpoints currently store summaries and artifact paths, not workspace sna
 - Sirfaraz orchestration and specialist execution.
 - Separate read-only Raza monitoring service.
 - Authenticated GitHub automation, cloud deployment, mobile dashboard, and notifications.
+
+## Latest work (2026-10-16)
+
+- Deferred the external OmniRoute audit at the owner's direction; implementation continues using repository code and GitHub CI evidence.
+- Fixed queue test nondeterminism by passing explicit timestamps to acknowledgement/release operations.
+- Added a regression test proving an expired lease cannot be released.
+- The latest commits have not yet returned a CI run/status, so this repair remains pending verification.
 
 ## Next actions
 
