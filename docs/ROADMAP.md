@@ -5,7 +5,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [x] Add CI and validate the repository (latest branch revision passed typecheck, tests, build, and lint).
+- [x] Add CI and validate the repository (latest code revision passed typecheck, tests, build, and lint; docs-only follow-up also passed).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
@@ -24,7 +24,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 2 — Durable task engine
 - [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
 - [ ] Choose persistent database and queue based on verified free-tier terms and reliability.
-- [ ] Implement durable worker leases, idempotency, checkpointing, and restart recovery (in-memory lease/idempotency contract exists; production persistence remains pending).
+- [ ] Implement durable worker leases, idempotency, checkpointing, and restart recovery (PostgreSQL adapters and CI integration tests exist; production provisioning and recovery drills remain pending).
 - [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
 
@@ -46,7 +46,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Implement authenticated GitHub issue/branch/commit/report operations.
 - [ ] Add CI: typecheck, build, tests, secret scan, dependency review.
 - [ ] Verify every push by fetching remote commit SHA and changed paths.
-- [ ] Document local setup and recovery.
+- [x] Document database backup, recovery, and connection-pool operating procedures (runbook only; no live backup process is configured).
 
 ## Stage 6 — Cloud hosting
 - [ ] Compare current free-tier options, limits, sleep behavior, and storage durability.
