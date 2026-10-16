@@ -5,7 +5,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [x] Add CI and validate the repository (latest code revision passed typecheck, tests, build, and lint; docs-only follow-up also passed).
+- [x] Add CI and validate the repository (code checks passed with the committed lockfile; the PostgreSQL job is still being verified on the latest revision).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
@@ -23,7 +23,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 
 ## Stage 2 — Durable task engine
 - [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
-- [ ] Choose persistent database and queue based on verified free-tier terms and reliability.
+- [ ] Choose persistent database and queue based on verified free-tier terms and reliability (official free-tier comparison documented; Aiven and Neon shortlisted, but no provider selected or provisioned).
 - [ ] Implement durable worker leases, idempotency, checkpointing, and restart recovery (PostgreSQL adapters and CI integration tests exist; production provisioning and recovery drills remain pending).
 - [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
@@ -47,9 +47,10 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Add CI: typecheck, build, tests, secret scan, dependency review.
 - [ ] Verify every push by fetching remote commit SHA and changed paths.
 - [x] Document database backup, recovery, and connection-pool operating procedures (runbook only; no live backup process is configured).
+- [x] Commit a Node 22 npm lockfile and switch both CI install steps to `npm ci` (typecheck, unit tests, build, lint, and audit passed on the code run; latest PostgreSQL integration job remains pending).
 
 ## Stage 6 — Cloud hosting
-- [ ] Compare current free-tier options, limits, sleep behavior, and storage durability.
+- [x] Compare current free-tier options, limits, sleep behavior, and storage durability (evaluation documented; no provider selected).
 - [ ] Select hosting only after validating queue/database support and security.
 - [ ] Deploy worker and API with health checks, logs, backups, and rollback.
 - [ ] Ensure operation continues when Zak's laptop and phone are off.
