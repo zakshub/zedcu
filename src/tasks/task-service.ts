@@ -14,6 +14,18 @@ export interface TaskServiceOptions {
   createId?: () => string;
 }
 
+interface AtomicTaskSubmissionStore extends TaskStore {
+  createQueued(
+    task: TaskRecord,
+    idempotencyKey: string
+  ): Promise<{
+    taskId: string;
+    idempotencyKey: string;
+    enqueuedAt: string;
+    attempts: number;
+  }>;
+}
+
 export class TaskService {
   private readonly now: () => Date;
   private readonly createId: () => string;
@@ -24,19 +36,24 @@ export class TaskService {
   }
 
   async create(request: string): Promise<TaskRecord> {
-    if (!request.trim()) throw new Error("Task request cannot be empty.");
-    const now = this.now().toISOString();
-    const task: TaskRecord = {
-      id: this.createId(),
-      request: request.trim(),
-      state: "queued",
-      createdAt: now,
-      updatedAt: now,
-      version: 1,
-      checkpoints: [],
-      events: [{ sequence: 1, type: "created", at: now, toState: "queued", summary: "Task created." }]
-    };
+    const task = this.newRecord(request);
     await this.store.create(task);
+    return task;
+  }
+
+  /**
+   * Submit a task and enqueue it atomically. This requires a store such as
+   * PostgresTaskStore that implements createQueued(); JSON/test stores fail
+   * closed rather than creating a task that has no queue entry.
+   */
+  async submit(request: string, idempotencyKey: string): Promise<TaskRecord> {
+    if (!idempotencyKey.trim()) throw new Error("Idempotency key cannot be empty.");
+    if (typeof (this.store as Partial<AtomicTaskSubmissionStore>).createQueued !== "function") {
+      throw new Error("Task store does not support atomic submission; use a PostgreSQL TaskStore.");
+    }
+    const atomicStore = this.store as AtomicTaskSubmissionStore;
+    const task = this.newRecord(request);
+    await atomicStore.createQueued(task, idempotencyKey.trim());
     return task;
   }
 
@@ -94,5 +111,26 @@ export class TaskService {
     };
     await this.store.save(updated, current.version);
     return updated;
+  }
+
+  private newRecord(request: string): TaskRecord {
+    if (!request.trim()) throw new Error("Task request cannot be empty.");
+    const now = this.now().toISOString();
+    return {
+      id: this.createId(),
+      request: request.trim(),
+      state: "queued",
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+      checkpoints: [],
+      events: [{
+        sequence: 1,
+        type: "created",
+        at: now,
+        toState: "queued",
+        summary: "Task created."
+      }]
+    };
   }
 }
