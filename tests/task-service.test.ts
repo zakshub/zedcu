@@ -22,6 +22,22 @@ async function setup() {
   return { store, service };
 }
 
+
+class AtomicMemoryStore extends JsonTaskStore {
+  private readonly keys = new Map<string, string>();
+
+  async getByIdempotencyKey(key: string) {
+    const taskId = this.keys.get(key);
+    return taskId ? this.get(taskId) : null;
+  }
+
+  async createQueued(task: import("../src/tasks/task-record.js").TaskRecord, key: string) {
+    await this.create(task);
+    this.keys.set(key, task.id);
+    return { taskId: task.id, idempotencyKey: key, enqueuedAt: task.createdAt, attempts: 0 };
+  }
+}
+
 describe("TaskService", () => {
   it("creates, transitions, checkpoints, and audits a task durably", async () => {
     const { store, service } = await setup();
@@ -46,6 +62,27 @@ describe("TaskService", () => {
     await expect(service.create("  ")).rejects.toThrow("cannot be empty");
     const task = await service.create("valid");
     await expect(service.checkpoint(task.id, " ")).rejects.toThrow("cannot be empty");
+  });
+
+  it("returns the original task for a repeated idempotency key and same request", async () => {
+    directory = await mkdtemp(join(tmpdir(), "zedcu-idempotent-service-"));
+    const store = new AtomicMemoryStore(join(directory, "tasks.json"));
+    let id = 0;
+    const service = new TaskService(store, { createId: () => `task-${++id}` });
+    const first = await service.submit("same request", "same-key");
+    const second = await service.submit("same request", "same-key");
+    expect(second.id).toBe(first.id);
+    expect(await store.list()).toHaveLength(1);
+  });
+
+  it("rejects reusing an idempotency key for a different request", async () => {
+    directory = await mkdtemp(join(tmpdir(), "zedcu-idempotent-conflict-"));
+    const store = new AtomicMemoryStore(join(directory, "tasks.json"));
+    let id = 0;
+    const service = new TaskService(store, { createId: () => `task-${++id}` });
+    await service.submit("first request", "same-key");
+    await expect(service.submit("different request", "same-key")).rejects.toThrow(/different task request/);
+    expect(await store.list()).toHaveLength(1);
   });
 
   it("fails closed when a store cannot atomically enqueue submissions", async () => {
