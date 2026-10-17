@@ -8,21 +8,21 @@
 
 ## Latest verified code
 
-GitHub Actions run [#291](https://github.com/zakshub/zedcu/actions/runs/39053012186) passed both jobs on commit `8c5766948d7832bede674eabdc65f6dc592100c`:
-- 69 unit tests passed.
+GitHub Actions run [#323](https://github.com/zakshub/zedcu/actions/runs/39053502810) passed both jobs on code commit `4ccf584ddf0af4c66e7f65c9ff99fa6d377cf531`:
+- 76 unit tests passed.
 - TypeScript typecheck, build, lint, and high-severity dependency audit passed.
 - PostgreSQL 16 schema/migration checks and four live integration tests passed.
 
-The follow-up commits update documentation and are being checked separately.
+Subsequent changes update documentation only and have separate CI runs.
 
 ## Implemented
 
 - Strict TypeScript baseline, Node 22 lockfile, and deterministic `npm ci` CI installs.
-- Provider contracts, free-only route policy, gateway registry, capability/priority routing, and bounded fallback.
-- Generic OpenAI-compatible adapter with server-side credentials, HTTPS for remote endpoints, normalized failures, usage extraction, and cancellation.
-- Configurable multi-route worker that attempts only explicitly attested zero-cost routes with recent HTTPS evidence metadata.
+- Provider contracts, free-only route policy, gateway registry, capability/priority routing, bounded fallback, and a generic OpenAI-compatible adapter.
+- Multi-route worker configuration with server-side secrets, per-route evidence metadata, priority order, bounded fallback, and shutdown draining.
 - PostgreSQL TaskStore and durable queue with leases, idempotency, audit events, checkpoints, and atomic task + queue submission.
 - Authenticated HTTP task API with health/readiness, idempotent task submission, listing, inspection, and constrained state actions.
+- Basic responsive control dashboard served by the API. It supports token-based connection, task submission, history, checkpoint inspection, and supported task state actions. The token remains in page memory rather than browser storage.
 - PostgreSQL-backed worker entry point and runtime start scripts.
 - Backup/recovery runbook, free-tier database comparison, and runtime quick-start instructions.
 
@@ -33,16 +33,16 @@ The follow-up commits update documentation and are being checked separately.
 - No scheduled backup or successful production restore drill.
 - Sirfaraz's natural-language command/orchestration layer and all 15 specialist execution roles are not implemented.
 - Raza's separate read-only verification service is not implemented.
-- No mobile dashboard, multi-user authentication, notifications, or authenticated GitHub execution workflow.
-- The current worker uses OpenAI-compatible chat completions. Native-provider protocols need their own adapters.
+- No authenticated GitHub execution workflow, notifications, multi-user accounts, or role-based permissions.
+- The current adapter supports OpenAI-compatible chat completions; native-provider protocols need their own adapters.
 - A single bearer token is starter authentication, not a production identity/permission system.
 
 ## Immediate next steps
 
-1. Confirm CI for the newest documentation commits.
+1. Verify the latest documentation-only CI runs.
 2. Test API + worker together against an approved disposable PostgreSQL instance.
 3. Verify official free-tier terms for at least two concrete models before configuring route entries.
-4. Add runtime tests for multi-route fallback and worker restart/recovery.
+4. Implement integration tests for multi-route worker execution and crash/restart recovery.
 5. Implement Sirfaraz task planning and specialist dispatch, then the independent Raza auditor.
 6. Only after explicit approval, select a host, configure secrets, perform a restore drill, and deploy. Do not merge PR #2 or provision paid services without Zak's approval.
 
