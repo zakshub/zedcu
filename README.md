@@ -1,6 +1,6 @@
 # ZEDCU — Zero-Budget, Evidence-Driven Command Universe
 
-ZEDCU is a planned cloud-hosted AI operating system: one command interface, specialist agents, controlled execution, independent progress verification, durable checkpoints, GitHub-backed artifacts, and a mobile-friendly dashboard.
+ZEDCU is being built as a cloud-hosted AI operating system. The feature branch now includes a PostgreSQL-backed task API/queue foundation and a generic OpenAI-compatible model adapter; Sirfaraz orchestration, specialist execution, the independent Raza monitor, hosted deployment, and the mobile dashboard remain unfinished.
 
 > **Hard financial boundary: USD $0 monthly spend.** No purchases, paid model fallback, automatic upgrades, or hidden paid routes. Free quotas are finite. When eligible free routes are exhausted or pricing cannot be verified, pause and notify Zak.
 
@@ -16,7 +16,7 @@ ZEDCU is a planned cloud-hosted AI operating system: one command interface, spec
 
 ## Current repository truth
 
-This repository is being initialized with the documented project direction and staged implementation plan. The presence of planning files does not mean the full agent runtime, dashboard, or cloud service already exists.
+The current feature branch has executable API and worker entry points plus tests. It is not deployed, and it does not yet implement the complete multi-agent operating system. See [the quick-start guide](docs/QUICKSTART.md) for local setup, environment requirements, and the current limitations. The [status file](STATUS.md) distinguishes tested code from unfinished and undeployed features.
 
 ## Non-negotiable rules
 
@@ -29,7 +29,7 @@ This repository is being initialized with the documented project direction and s
 7. **Honest reporting:** distinguish planned, implemented, tested, deployed, and independently verified.
 8. **No fabricated recovery:** never claim new baseline files recover an earlier unverified OpenCode session.
 
-## Planned agent structure
+## Current runtime entry points\n\n- `npm start`: authenticated HTTP task API, backed by PostgreSQL.\n- `npm run start:worker`: one-route worker using the generic OpenAI-compatible adapter and strict free-route metadata gate.\n- `npm run build`: compile TypeScript before starting either process.\n- [Quick-start guide](docs/QUICKSTART.md): configuration, migration, task submission, and limitations.\n\nThese commands do not provision a database or deploy the service. A valid PostgreSQL database and carefully verified free-model configuration are required for end-to-end execution.\n\n## Planned agent structure
 
 See [docs/AGENTS.md](docs/AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/IMPLEMENTATION_SPEC.md](docs/IMPLEMENTATION_SPEC.md), [docs/COST_POLICY.md](docs/COST_POLICY.md), [docs/SECURITY.md](docs/SECURITY.md), [docs/ROADMAP.md](docs/ROADMAP.md), and [docs/DECISIONS.md](docs/DECISIONS.md).
 
