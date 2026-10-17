@@ -43,9 +43,9 @@ Health endpoints:
 - `GET /health` — process liveness.
 - `GET /ready` — PostgreSQL readiness.
 
-## 3. Configure the worker only after verifying a genuinely free model
+## 3. Configure the worker only after verifying genuinely free model routes
 
-Set these server-side variables in the worker's secret/configuration settings:
+Set these server-side variables in the worker's secret/configuration settings. Single-route mode uses the variables below. For multiple routes, set `ZEDCU_ROUTES_JSON` to an array of route metadata objects. Each object defines `id`, `gatewayId`, `provider`, `model`, `baseUrlEnv`, optional `apiKeyEnv`, `evidenceUrl`, `evidenceCheckedAt`, `confirmedFree`, `costUsdPerMillionTokens`, optional `priority`, optional `capabilities`, and optional `enabled`. The values of `baseUrlEnv` and `apiKeyEnv` are environment variable names, not secret values. Different route entries may use different gateways/providers; routes sharing a gateway ID must share the same endpoint and key settings.
 
 - `ZEDCU_GATEWAY_BASE_URL`: trusted HTTPS OpenAI-compatible API base URL, usually ending in `/v1`.
 - `ZEDCU_GATEWAY_API_KEY`: secret key if the endpoint requires it.
@@ -66,7 +66,7 @@ npm run build
 npm run start:worker
 ```
 
-The worker claims durable PostgreSQL queue entries, calls the configured model through the generic adapter, and records the result in a task checkpoint. This initial worker supports one configured model route; multi-route live fallback configuration and Sirfaraz orchestration are not yet implemented.
+The worker claims durable PostgreSQL queue entries, attempts eligible configured routes in priority order, and records the result in a task checkpoint. Retryable failures may move to the next eligible route; if all eligible routes fail or zero cost cannot be established, the task is paused. This is a basic multi-route worker, not yet Sirfaraz orchestration or a complete specialist-agent runtime.
 
 ## 4. Submit a task
 
