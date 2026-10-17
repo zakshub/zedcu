@@ -57,12 +57,12 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] No deployment before explicit approval.
 
 ## Stage 7 — Mobile-friendly control dashboard
-- [ ] Task submission and task history.
-- [ ] Live status, logs, artifacts, diffs, test results, and provider attempts.
-- [ ] Approval inbox for gated actions.
-- [ ] Pause/resume/cancel/retry controls.
+- [x] Basic task submission and task history (responsive starter dashboard; advanced filtering remains pending).
+- [ ] Live status, detailed logs, artifacts, diffs, test results, and provider attempts (current dashboard shows saved task state and latest checkpoint).
+- [ ] Approval inbox for gated actions (basic approval action endpoint exists, but approval workflow/policy remains pending).
+- [x] Basic pause/resume/cancel actions for valid task states (retry UX and end-to-end worker control remain pending).
 - [ ] Spend/usage visibility and clear $0-policy stop messages.
-- [ ] Secure login, responsive design, accessible status feedback.
+- [x] Responsive layout and basic status feedback.\n- [ ] Production-grade secure login, user accounts, role-based permissions, and accessible full-state feedback.
 
 ## Release criteria
 
