@@ -39,6 +39,8 @@ Start the API:
 npm start
 ```
 
+Open `http://localhost:8080/` for the responsive control dashboard. Paste the server token in the connection field; it stays in page memory and is not written to browser storage.
+
 Health endpoints:
 - `GET /health` — process liveness.
 - `GET /ready` — PostgreSQL readiness.
@@ -92,7 +94,7 @@ The worker's output is stored as a checkpoint in the task record. Never expose t
 ## Current limitations
 
 - No hosting or database is provisioned by this repository.
-- No mobile dashboard, user accounts, role-based multi-user auth, Sirfaraz, specialist agent execution, or separate Raza monitor yet.
+- A basic responsive control dashboard is included, but there are no user accounts or role-based multi-user auth. Sirfaraz, specialist agent execution, and the separate Raza monitor remain unfinished.
 - The API uses one bearer token; this is a starter control plane, not a complete multi-user identity system.
 - The worker uses one configured model route; it is not yet an automatic multi-gateway router.
 - No automated production backups are configured. Complete a tested restore drill before storing important data.
