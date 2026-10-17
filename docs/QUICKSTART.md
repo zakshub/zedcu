@@ -39,7 +39,7 @@ Start the API:
 npm start
 ```
 
-Open `http://localhost:8080/` for the responsive control dashboard. Paste the server token in the connection field; it stays in page memory and is not written to browser storage.
+Open `http://localhost:8080/` for the responsive control dashboard. Paste the server token in the connection field; it stays in page memory and is not written to browser storage. Each task also offers a read-only Raza audit that checks persisted task/event/checkpoint consistency. It is an initial record-invariant check, not yet the separate independent cloud auditor or a check of external GitHub/CI evidence.
 
 Health endpoints:
 - `GET /health` — process liveness.
