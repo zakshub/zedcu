@@ -11,12 +11,12 @@ ZEDCU is being built as a cloud-hosted AI operating system. The feature branch n
 - **Progress Monitor:** a separate read-only observer. It independently checks repository state, files, commits, logs, and test outputs. It must not accept Sirfaraz's claims as proof.
 - **GitHub:** durable source control and audit trail; it is not a compute host.
 - **Cloud runtime:** target so jobs can run while Zak's laptop and phone are off.
-- **Mobile dashboard:** future control surface for task submission, approvals, progress, logs, diffs, tests, usage, pause/resume/cancel.
+- **Mobile dashboard:** a basic responsive control surface is now included for task submission, history, inspection, and supported state actions; full approvals, detailed logs/diffs, usage analytics, and production-grade identity controls remain future work.
 - **OpenRouter and OmniRoute:** separate integrations, not interchangeable names. Multiple routers do not magically multiply an upstream provider's free quota.
 
 ## Current repository truth
 
-The current feature branch has executable API and worker entry points plus tests. It is not deployed, and it does not yet implement the complete multi-agent operating system. See [the quick-start guide](docs/QUICKSTART.md) for local setup, environment requirements, and the current limitations. The [status file](STATUS.md) distinguishes tested code from unfinished and undeployed features.
+The current feature branch has executable API and worker entry points, a basic responsive control dashboard, and automated tests. It is not deployed, and it does not yet implement the complete multi-agent operating system. See [the quick-start guide](docs/QUICKSTART.md) for local setup, environment requirements, and the current limitations. The [status file](STATUS.md) distinguishes tested code from unfinished and undeployed features.
 
 ## Non-negotiable rules
 
@@ -40,7 +40,7 @@ See [docs/AGENTS.md](docs/AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 - Stage 2: PostgreSQL task store/queue, worker leases, atomic submission, checkpoints, and CI integration tests are implemented; production database provisioning and restore drills remain pending.
 - Stage 3: Sirfaraz command orchestration and scoped specialist agents remain pending.
 - Stage 4: CI, audit records, and basic authenticated task API exist; the independent Raza monitor and authenticated GitHub execution remain pending.
-- Stage 5: API/worker entry points exist for self-hosting; cloud deployment and secure mobile-friendly dashboard remain pending.
+- Stage 5: API/worker entry points and a basic responsive dashboard exist for self-hosting; cloud deployment and production-grade authentication remain pending.
 
 Do not skip cloud deployment before routing, persistence, monitoring, and security foundations work.
 
