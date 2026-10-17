@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { TaskStore } from "../tasks/task-record.js";
 import { TaskService, TaskNotFoundError } from "../tasks/task-service.js";
+import { TaskConflictError } from "../tasks/json-task-store.js";
 import { InvalidTaskTransitionError, type TaskEvent } from "../tasks/task-state.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
@@ -134,6 +135,8 @@ export function createApiServer(options: ApiServerOptions): Server {
     } catch (error) {
       if (error instanceof TaskNotFoundError) {
         send(response, 404, { error: "task_not_found" });
+      } else if (error instanceof TaskConflictError) {
+        send(response, 409, { error: "idempotency_conflict" });
       } else if (error instanceof InvalidTaskTransitionError) {
         send(response, 409, { error: "invalid_task_transition", from: error.from, action: error.event });
       } else if (error instanceof Error && "statusCode" in error && typeof error.statusCode === "number") {
