@@ -8,19 +8,19 @@
 
 ## Latest verified code
 
-GitHub Actions run [#323](https://github.com/zakshub/zedcu/actions/runs/39053502810) passed both jobs on code commit `4ccf584ddf0af4c66e7f65c9ff99fa6d377cf531`:
+GitHub Actions run [#342](https://github.com/zakshub/zedcu/actions/runs/39053764653) passed both jobs on code commit `743e84b193be123dc677676ec00688f68719ec1f`:
 - 76 unit tests passed.
 - TypeScript typecheck, build, lint, and high-severity dependency audit passed.
-- PostgreSQL 16 schema/migration checks and four live integration tests passed.
+- PostgreSQL 16 schema/migration checks and five live integration tests passed, including atomic re-queue on resume.
 
-Subsequent changes update documentation only and have separate CI runs.
+The latest commits after that code verification update documentation only and are being checked separately.
 
 ## Implemented
 
 - Strict TypeScript baseline, Node 22 lockfile, and deterministic `npm ci` CI installs.
 - Provider contracts, free-only route policy, gateway registry, capability/priority routing, bounded fallback, and a generic OpenAI-compatible adapter.
 - Multi-route worker configuration with server-side secrets, per-route evidence metadata, priority order, bounded fallback, and shutdown draining.
-- PostgreSQL TaskStore and durable queue with leases, idempotency, audit events, checkpoints, and atomic task + queue submission.
+- PostgreSQL TaskStore and durable queue with leases, idempotency, audit events, checkpoints, atomic task + queue submission, and atomic re-queue on resume.
 - Authenticated HTTP task API with health/readiness, idempotent task submission, listing, inspection, and constrained state actions.
 - Basic responsive control dashboard served by the API. It supports token-based connection, task submission, history, checkpoint inspection, and supported task state actions. The token remains in page memory rather than browser storage.
 - PostgreSQL-backed worker entry point and runtime start scripts.
@@ -36,13 +36,14 @@ Subsequent changes update documentation only and have separate CI runs.
 - No authenticated GitHub execution workflow, notifications, multi-user accounts, or role-based permissions.
 - The current adapter supports OpenAI-compatible chat completions; native-provider protocols need their own adapters.
 - A single bearer token is starter authentication, not a production identity/permission system.
+- Pause/cancel state changes are checked after the current model request returns; this is not yet hard cancellation of an in-flight upstream request.
 
 ## Immediate next steps
 
 1. Verify the latest documentation-only CI runs.
 2. Test API + worker together against an approved disposable PostgreSQL instance.
 3. Verify official free-tier terms for at least two concrete models before configuring route entries.
-4. Implement integration tests for multi-route worker execution and crash/restart recovery.
+4. Add a full end-to-end worker test with mocked gateways and improve in-flight cancellation semantics.
 5. Implement Sirfaraz task planning and specialist dispatch, then the independent Raza auditor.
 6. Only after explicit approval, select a host, configure secrets, perform a restore drill, and deploy. Do not merge PR #2 or provision paid services without Zak's approval.
 
