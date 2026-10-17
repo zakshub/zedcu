@@ -16,6 +16,7 @@ export interface TaskServiceOptions {
 }
 
 interface AtomicTaskSubmissionStore extends TaskStore {
+  saveAndRequeue?(task: TaskRecord, expectedVersion: number): Promise<void>;
   getByIdempotencyKey?(idempotencyKey: string): Promise<TaskRecord | null>;
   createQueued(
     task: TaskRecord,
@@ -100,7 +101,16 @@ export class TaskService {
         summary: `State changed from ${current.state} to ${nextState}.`
       }]
     };
-    await this.store.save(updated, current.version);
+    const requiresRequeue = nextState === "queued" && current.state !== "queued";
+    if (requiresRequeue) {
+      const atomicStore = this.store as Partial<AtomicTaskSubmissionStore>;
+      if (typeof atomicStore.saveAndRequeue !== "function") {
+        throw new Error("Task store does not support atomic resume and queue reactivation.");
+      }
+      await atomicStore.saveAndRequeue(updated, current.version);
+    } else {
+      await this.store.save(updated, current.version);
+    }
     return updated;
   }
 
