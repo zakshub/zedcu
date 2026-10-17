@@ -89,7 +89,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
           max_tokens: request.maxOutputTokens,
           stream: false
         }),
-        signal: request.signal
+        ...(request.signal ? { signal: request.signal } : {})
       });
     } catch (error) {
       if (request.signal?.aborted) {
