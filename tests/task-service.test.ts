@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { JsonTaskStore } from "../src/tasks/json-task-store.js";
 import { TaskService } from "../src/tasks/task-service.js";
+import type { TaskRecord } from "../src/tasks/task-record.js";
 
 let directory = "";
 afterEach(async () => {
@@ -31,7 +32,7 @@ class AtomicMemoryStore extends JsonTaskStore {
     return taskId ? this.get(taskId) : null;
   }
 
-  async createQueued(task: import("../src/tasks/task-record.js").TaskRecord, key: string) {
+  async createQueued(task: TaskRecord, key: string) {
     await this.create(task);
     this.keys.set(key, task.id);
     return { taskId: task.id, idempotencyKey: key, enqueuedAt: task.createdAt, attempts: 0 };
