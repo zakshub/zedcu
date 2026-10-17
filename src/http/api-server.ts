@@ -4,6 +4,7 @@ import type { TaskStore } from "../tasks/task-record.js";
 import { TaskService, TaskNotFoundError } from "../tasks/task-service.js";
 import { TaskConflictError } from "../tasks/json-task-store.js";
 import { InvalidTaskTransitionError, type TaskEvent } from "../tasks/task-state.js";
+import { DASHBOARD_CSS, DASHBOARD_HTML, DASHBOARD_JS } from "./dashboard.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const ALLOWED_ACTIONS = new Set<TaskEvent>(["pause", "resume", "cancel", "approval_granted", "approval_denied"]);
@@ -14,6 +15,16 @@ export interface ApiServerOptions {
   bearerToken: string;
   /** Optional async readiness check; never return credentials or raw errors. */
   readinessCheck?: () => Promise<void>;
+}
+
+function sendText(response: ServerResponse, status: number, contentType: string, body: string): void {
+  response.writeHead(status, {
+    "Content-Type": contentType,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+  });
+  response.end(body);
 }
 
 function send(response: ServerResponse, status: number, body: unknown): void {
@@ -67,6 +78,18 @@ export function createApiServer(options: ApiServerOptions): Server {
   return createServer(async (request, response) => {
     try {
       const url = new URL(request.url ?? "/", "http://localhost");
+      if (request.method === "GET" && url.pathname === "/") {
+        sendText(response, 200, "text/html; charset=utf-8", DASHBOARD_HTML);
+        return;
+      }
+      if (request.method === "GET" && url.pathname === "/dashboard.css") {
+        sendText(response, 200, "text/css; charset=utf-8", DASHBOARD_CSS);
+        return;
+      }
+      if (request.method === "GET" && url.pathname === "/dashboard.js") {
+        sendText(response, 200, "text/javascript; charset=utf-8", DASHBOARD_JS);
+        return;
+      }
       if (request.method === "GET" && url.pathname === "/health") {
         send(response, 200, { status: "ok", service: "zedcu-api" });
         return;
