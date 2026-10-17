@@ -256,6 +256,14 @@ export class PostgresTaskStore implements TaskStore {
   }
 
   async save(task: TaskRecord, expectedVersion: number): Promise<void> {
+    await this.persistTask(task, expectedVersion, false);
+  }
+
+  async saveAndRequeue(task: TaskRecord, expectedVersion: number): Promise<void> {
+    await this.persistTask(task, expectedVersion, true);
+  }
+
+  private async persistTask(task: TaskRecord, expectedVersion: number, requeue: boolean): Promise<void> {
     if (task.version !== expectedVersion + 1) {
       throw new TaskConflictError("Updated task version must increment by exactly one.");
     }
@@ -304,6 +312,19 @@ export class PostgresTaskStore implements TaskStore {
       }
       for (const event of task.events) {
         if (event.sequence > lastEvent) await this.insertEvent(client, task.id, event);
+      }
+      if (requeue) {
+        const queued = await client.query<{ task_id: string }>(
+          `UPDATE zedcu_task_queue
+           SET status = 'queued', enqueued_at = $2, worker_id = NULL,
+               lease_token = NULL, lease_expires_at = NULL
+           WHERE task_id = $1
+           RETURNING task_id`,
+          [task.id, new Date(task.updatedAt)]
+        );
+        if (queued.rowCount !== 1) {
+          throw new TaskConflictError("Cannot resume task because its durable queue entry is missing.");
+        }
       }
       await client.query("COMMIT");
     } catch (error) {
