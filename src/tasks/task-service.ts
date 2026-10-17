@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { TaskCheckpoint, TaskRecord, TaskStore } from "./task-record.js";
 import { transitionTask, type TaskEvent } from "./task-state.js";
+import { TaskConflictError } from "./json-task-store.js";
 
 export class TaskNotFoundError extends Error {
   constructor(taskId: string) {
@@ -15,6 +16,7 @@ export interface TaskServiceOptions {
 }
 
 interface AtomicTaskSubmissionStore extends TaskStore {
+  getByIdempotencyKey?(idempotencyKey: string): Promise<TaskRecord | null>;
   createQueued(
     task: TaskRecord,
     idempotencyKey: string
@@ -52,9 +54,30 @@ export class TaskService {
       throw new Error("Task store does not support atomic submission; use a PostgreSQL TaskStore.");
     }
     const atomicStore = this.store as AtomicTaskSubmissionStore;
+    const key = idempotencyKey.trim();
+    const existing = await atomicStore.getByIdempotencyKey?.(key);
+    if (existing) {
+      if (existing.request !== request.trim()) {
+        throw new TaskConflictError("Idempotency key was already used for a different task request.");
+      }
+      return existing;
+    }
+
     const task = this.newRecord(request);
-    await atomicStore.createQueued(task, idempotencyKey.trim());
-    return task;
+    try {
+      await atomicStore.createQueued(task, key);
+      return task;
+    } catch (error) {
+      // Resolve a concurrent duplicate submission to the first committed task.
+      const raced = await atomicStore.getByIdempotencyKey?.(key);
+      if (raced) {
+        if (raced.request !== request.trim()) {
+          throw new TaskConflictError("Idempotency key was concurrently used for a different task request.");
+        }
+        return raced;
+      }
+      throw error;
+    }
   }
 
   async apply(taskId: string, event: TaskEvent): Promise<TaskRecord> {
