@@ -52,6 +52,17 @@ async function processOne(): Promise<boolean> {
       { maxAttempts: routes.length }
     );
 
+    const latestTask = await store.get(task.id);
+    if (!latestTask || latestTask.state !== "running") {
+      await queue.acknowledge(lease.taskId, lease.leaseToken);
+      console.info(JSON.stringify({
+        event: "task_execution_stopped_by_state_change",
+        taskId: task.id,
+        state: latestTask?.state ?? "missing"
+      }));
+      return true;
+    }
+
     if (result.state === "completed" && result.response) {
       const output = result.response.text.slice(0, 8_000);
       await service.checkpoint(task.id, `Model output: ${output}`);
