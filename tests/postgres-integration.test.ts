@@ -93,6 +93,25 @@ describe("PostgreSQL persistence integration", () => {
     }
   });
 
+  it("atomically requeues a paused task when resumed", async () => {
+    const taskId = randomUUID();
+    createdTaskIds.push(taskId);
+    const service = new TaskService(store, { createId: () => taskId });
+    await service.submit("Resume queue integration test", randomUUID());
+    const firstLease = await queue.claim("integration-worker-before-pause", 30_000);
+    expect(firstLease?.taskId).toBe(taskId);
+    await service.apply(taskId, "start");
+    await service.apply(taskId, "dispatch");
+    await service.apply(taskId, "pause");
+    await queue.acknowledge(taskId, firstLease?.leaseToken ?? "");
+
+    const resumed = await service.apply(taskId, "resume");
+    expect(resumed.state).toBe("queued");
+    const secondLease = await queue.claim("integration-worker-after-resume", 30_000);
+    expect(secondLease?.taskId).toBe(taskId);
+    await queue.acknowledge(taskId, secondLease?.leaseToken ?? "");
+  });
+
   it("reclaims an expired lease and rejects the stale token", async () => {
     const task = newTask();
     await store.createQueued(task, randomUUID());
