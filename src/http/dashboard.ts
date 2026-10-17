@@ -66,6 +66,32 @@ function button(label, taskId, eventName) {
   });
   return b;
 }
+function auditButton(taskId, card) {
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = "Raza audit";
+  b.addEventListener("click", async () => {
+    b.disabled = true;
+    try {
+      const payload = await api("/v1/tasks/" + encodeURIComponent(taskId) + "/audit");
+      const report = payload.audit;
+      const panel = document.createElement("div"); panel.className = "checkpoint";
+      const heading = document.createElement("strong");
+      heading.textContent = report.passed ? "Raza check: no structural errors" : "Raza check: errors found";
+      panel.append(heading);
+      (report.findings || []).forEach((finding) => {
+        const line = document.createElement("p");
+        line.textContent = finding.severity.toUpperCase() + " · " + finding.code + ": " + finding.message;
+        panel.append(line);
+      });
+      const previous = card.querySelector(".audit-result");
+      if (previous) previous.remove();
+      panel.classList.add("audit-result");
+      card.append(panel);
+    } catch (error) { setNotice(error.message, true); }
+    finally { b.disabled = false; }
+  });
+  return b;
+}
 function renderTask(task) {
   const card = document.createElement("article"); card.className = "task";
   const top = document.createElement("div"); top.className = "task-top";
@@ -78,6 +104,7 @@ function renderTask(task) {
   const version = document.createElement("span"); version.textContent = "Revision " + task.version;
   meta.append(created, version); card.append(meta);
   const actions = document.createElement("div"); actions.className = "task-actions";
+  actions.append(auditButton(task.id, card));
   if (task.state === "queued") actions.append(button("Cancel", task.id, "cancel"));
   if (task.state === "running" || task.state === "planning") actions.append(button("Pause", task.id, "pause"), button("Cancel", task.id, "cancel"));
   if (task.state === "paused" || task.state === "failed") actions.append(button("Resume", task.id, "resume"), button("Cancel", task.id, "cancel"));
