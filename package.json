@@ -13,7 +13,8 @@
     "test:postgres": "vitest run tests/postgres-integration.test.ts",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "start": "node dist/src/http/main.js"
   },
   "dependencies": {
     "pg": "^8.16.0"
