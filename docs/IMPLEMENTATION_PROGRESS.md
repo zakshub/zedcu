@@ -36,7 +36,7 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 
 ## Verification boundary
 
-Run #323 passed both jobs on code commit `4ccf584ddf0af4c66e7f65c9ff99fa6d377cf531`: `npm ci`, dependency audit threshold, typecheck, 76 unit tests, build, lint, PostgreSQL migration/schema checks, and four live PostgreSQL integration tests. This verifies the API, dashboard, worker, multi-route adapter, and idempotency behavior. Later documentation-only commits have separate CI runs.
+Run #342 passed both jobs on code commit `743e84b193be123dc677676ec00688f68719ec1f`: `npm ci`, dependency audit threshold, typecheck, 76 unit tests, build, lint, PostgreSQL migration/schema checks, and five live PostgreSQL integration tests. This verifies the API, dashboard, worker, multi-route adapter, idempotency behavior, and atomic resume/re-queue. Later documentation-only commits have separate CI runs.
 
 The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred.
 
@@ -64,7 +64,7 @@ The repository-wide Prettier check was removed from CI because it failed on 45 e
 - Added `docs/OPERATIONS_BACKUP_RECOVERY.md` covering backup exports, encryption, restore drills, recovery sequence, connection-pool sizing, cost/security stop conditions, and production-readiness checks. This is documentation only; no database or backup service was provisioned.
 - Generated and committed `package-lock.json` from clean Node.js 22/npm 10.9.9, then switched both CI dependency-install steps to `npm ci`.
 - Added `docs/FREE_TIER_DATABASE_EVALUATION.md` with current official-source comparison of Aiven, Neon, Supabase, and Render. Aiven and Neon remain candidates only.
-- Run #231 passed both jobs, including four live PostgreSQL integration tests. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
+- Run #231 passed both jobs, including five live PostgreSQL integration tests. No deployment was made; `main` remains unchanged and PR #2 remains a draft.
 
 ## Next actions
 
