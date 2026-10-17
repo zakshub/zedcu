@@ -26,6 +26,7 @@ if (requestTimeoutMs < 1_000) throw new Error("Worker lease must be at least 6 s
 
 let stopping = false;
 let active = false;
+let currentWork: Promise<boolean> | undefined;
 
 async function processOne(): Promise<boolean> {
   const lease = await queue.claim(workerId, leaseMs);
@@ -97,9 +98,12 @@ async function loop(): Promise<void> {
   if (stopping || active) return;
   active = true;
   try {
-    const didWork = await processOne();
+    currentWork = processOne();
+    const didWork = await currentWork;
+    currentWork = undefined;
     if (!stopping) setTimeout(() => void loop(), didWork ? 0 : 1_000);
   } catch {
+    currentWork = undefined;
     if (!stopping) setTimeout(() => void loop(), 3_000);
   } finally {
     active = false;
@@ -112,6 +116,7 @@ void loop();
 async function shutdown(): Promise<void> {
   if (stopping) return;
   stopping = true;
+  if (currentWork) await currentWork.catch(() => false);
   await pool.end();
   process.exit(0);
 }
