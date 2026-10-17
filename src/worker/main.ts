@@ -7,6 +7,22 @@ import { PostgresTaskQueue } from "../tasks/postgres-task-queue.js";
 import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 
+interface RouteConfig {
+  id: string;
+  gatewayId: string;
+  provider: string;
+  model: string;
+  baseUrlEnv: string;
+  apiKeyEnv?: string;
+  evidenceUrl: string;
+  evidenceCheckedAt: string;
+  confirmedFree: boolean;
+  costUsdPerMillionTokens: number;
+  enabled?: boolean;
+  priority?: number;
+  capabilities?: string[];
+}
+
 function required(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`Missing required environment setting: ${name}`);
@@ -21,49 +37,98 @@ function positiveInteger(name: string, fallback: number): number {
   return value;
 }
 
-const gatewayId = process.env.ZEDCU_GATEWAY_ID?.trim() || "openai-compatible";
-const model = required("ZEDCU_MODEL");
-const baseUrl = required("ZEDCU_GATEWAY_BASE_URL");
-const upstreamProvider = required("ZEDCU_UPSTREAM_PROVIDER");
-const evidenceUrl = required("ZEDCU_FREE_EVIDENCE_URL");
-const evidenceCheckedAt = required("ZEDCU_FREE_EVIDENCE_CHECKED_AT");
-const apiKey = process.env.ZEDCU_GATEWAY_API_KEY;
-const confirmedFree = process.env.ZEDCU_ROUTE_CONFIRMED_FREE === "true";
-const costPerMillion = process.env.ZEDCU_ROUTE_COST_USD_PER_MILLION_TOKENS;
-if (costPerMillion !== "0" || !confirmedFree) {
-  throw new Error(
-    "Worker start blocked: set ZEDCU_ROUTE_CONFIRMED_FREE=true only after verifying the exact model's official free terms, and ZEDCU_ROUTE_COST_USD_PER_MILLION_TOKENS=0."
-  );
-}
-const checkedDate = new Date(evidenceCheckedAt);
-if (Number.isNaN(checkedDate.getTime()) || checkedDate > new Date()) {
-  throw new Error("ZEDCU_FREE_EVIDENCE_CHECKED_AT must be a valid past timestamp.");
-}
-const parsedEvidence = new URL(evidenceUrl);
-if (parsedEvidence.protocol !== "https:") throw new Error("Free-route evidence URL must use HTTPS.");
+function parseRouteConfig(): RouteConfig[] {
+  const raw = process.env.ZEDCU_ROUTES_JSON;
+  if (raw?.trim()) {
+    let value: unknown;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw new Error("ZEDCU_ROUTES_JSON must be valid JSON.");
+    }
+    if (!Array.isArray(value) || value.length === 0 || value.length > 25) {
+      throw new Error("ZEDCU_ROUTES_JSON must be an array containing 1 to 25 route definitions.");
+    }
+    return value as RouteConfig[];
+  }
 
-const route: ProviderRoute = {
-  id: `${gatewayId}:${model}`,
-  gatewayId,
-  provider: upstreamProvider,
-  model,
-  enabled: true,
-  eligibility: "verified_free",
-  costUsdPerMillionTokens: 0,
-  evidenceUrl,
-  evidenceCheckedAt: checkedDate.toISOString(),
-  capabilities: ["text"],
-  priority: 1
-};
+  // Single-route compatibility mode; all secrets remain in separate environment variables.
+  return [{
+    id: `${process.env.ZEDCU_GATEWAY_ID?.trim() || "openai-compatible"}:${required("ZEDCU_MODEL")}`,
+    gatewayId: process.env.ZEDCU_GATEWAY_ID?.trim() || "openai-compatible",
+    provider: required("ZEDCU_UPSTREAM_PROVIDER"),
+    model: required("ZEDCU_MODEL"),
+    baseUrlEnv: "ZEDCU_GATEWAY_BASE_URL",
+    apiKeyEnv: "ZEDCU_GATEWAY_API_KEY",
+    evidenceUrl: required("ZEDCU_FREE_EVIDENCE_URL"),
+    evidenceCheckedAt: required("ZEDCU_FREE_EVIDENCE_CHECKED_AT"),
+    confirmedFree: process.env.ZEDCU_ROUTE_CONFIRMED_FREE === "true",
+    costUsdPerMillionTokens: Number(process.env.ZEDCU_ROUTE_COST_USD_PER_MILLION_TOKENS)
+  }];
+}
 
+function buildRoutes(configs: RouteConfig[]): { routes: ProviderRoute[]; adapters: Map<string, OpenAICompatibleAdapter> } {
+  const routes: ProviderRoute[] = [];
+  const adapters = new Map<string, OpenAICompatibleAdapter>();
+  const adapterConfig = new Map<string, { baseUrl: string; apiKey?: string }>();
+  const routeIds = new Set<string>();
+
+  for (const config of configs) {
+    if (!config || typeof config !== "object" || typeof config.id !== "string" ||
+        typeof config.gatewayId !== "string" || typeof config.provider !== "string" ||
+        typeof config.model !== "string" || typeof config.baseUrlEnv !== "string" ||
+        typeof config.evidenceUrl !== "string" || typeof config.evidenceCheckedAt !== "string") {
+      throw new Error("Each route must define id, gatewayId, provider, model, baseUrlEnv, evidenceUrl, and evidenceCheckedAt.");
+    }
+    if (config.enabled === false) continue;
+    if (!config.confirmedFree || config.costUsdPerMillionTokens !== 0) continue;
+    const evidenceDate = new Date(config.evidenceCheckedAt);
+    const evidence = new URL(config.evidenceUrl);
+    if (evidence.protocol !== "https:" || Number.isNaN(evidenceDate.getTime()) || evidenceDate > new Date()) continue;
+    if (routeIds.has(config.id)) throw new Error(`Duplicate route ID: ${config.id}`);
+    const baseUrl = process.env[config.baseUrlEnv]?.trim();
+    if (!baseUrl) continue;
+    const apiKey = config.apiKeyEnv ? process.env[config.apiKeyEnv] : undefined;
+
+    const previousConfig = adapterConfig.get(config.gatewayId);
+    if (previousConfig && (previousConfig.baseUrl !== baseUrl || previousConfig.apiKey !== apiKey)) {
+      throw new Error(`Routes sharing gateway ID '${config.gatewayId}' must use identical base URL and key settings.`);
+    }
+    if (!adapters.has(config.gatewayId)) {
+      adapters.set(config.gatewayId, new OpenAICompatibleAdapter(config.gatewayId, {
+        baseUrl,
+        ...(apiKey ? { apiKey } : {})
+      }));
+      adapterConfig.set(config.gatewayId, { baseUrl, ...(apiKey ? { apiKey } : {}) });
+    }
+
+    routeIds.add(config.id);
+    routes.push({
+      id: config.id,
+      gatewayId: config.gatewayId,
+      provider: config.provider,
+      model: config.model,
+      enabled: true,
+      eligibility: "verified_free",
+      costUsdPerMillionTokens: 0,
+      evidenceUrl: config.evidenceUrl,
+      evidenceCheckedAt: evidenceDate.toISOString(),
+      capabilities: config.capabilities ?? ["text"],
+      priority: config.priority ?? 0
+    });
+  }
+
+  if (routes.length === 0) {
+    throw new Error("No configured routes passed the explicit free-cost, evidence, and endpoint checks. Worker will not start.");
+  }
+  return { routes, adapters };
+}
+
+const { routes, adapters } = buildRoutes(parseRouteConfig());
 const pool = createPostgresPool();
 const store = new PostgresTaskStore(pool);
 const queue = new PostgresTaskQueue(pool);
 const service = new TaskService(store);
-const adapter = new OpenAICompatibleAdapter(gatewayId, {
-  baseUrl,
-  ...(apiKey ? { apiKey } : {})
-});
 const workerId = process.env.ZEDCU_WORKER_ID?.trim() || `worker-${randomUUID()}`;
 const leaseMs = positiveInteger("ZEDCU_WORKER_LEASE_MS", 60_000);
 const requestTimeoutMs = Math.min(30_000, leaseMs - 5_000);
@@ -85,15 +150,15 @@ async function processOne(): Promise<boolean> {
     await service.apply(task.id, "start");
     await service.apply(task.id, "dispatch");
     const result = await runWithFreeFallback(
-      [route],
-      new Map([[gatewayId, adapter]]),
+      routes,
+      adapters,
       {
         taskId: task.id,
         prompt: task.request,
         maxOutputTokens: positiveInteger("ZEDCU_MAX_OUTPUT_TOKENS", 1024),
         timeoutMs: requestTimeoutMs
       },
-      { maxAttempts: 1 }
+      { maxAttempts: routes.length }
     );
 
     if (result.state === "completed" && result.response) {
@@ -101,7 +166,12 @@ async function processOne(): Promise<boolean> {
       await service.checkpoint(task.id, `Model output: ${output}`);
       await service.apply(task.id, "complete");
       await queue.acknowledge(lease.taskId, lease.leaseToken);
-      console.info(JSON.stringify({ event: "task_completed", taskId: task.id, gatewayId, model }));
+      console.info(JSON.stringify({
+        event: "task_completed", taskId: task.id,
+        gatewayId: result.attempts.find((attempt) => attempt.outcome === "success")?.gatewayId,
+        model: result.attempts.find((attempt) => attempt.outcome === "success")?.model,
+        attemptedRoutes: result.attempts.length
+      }));
       return true;
     }
 
@@ -146,7 +216,7 @@ async function loop(): Promise<void> {
   }
 }
 
-console.info(JSON.stringify({ event: "worker_started", workerId, gatewayId, model }));
+console.info(JSON.stringify({ event: "worker_started", workerId, routes: routes.map(({ id, gatewayId, provider, model }) => ({ id, gatewayId, provider, model })) }));
 void loop();
 
 async function shutdown(): Promise<void> {
