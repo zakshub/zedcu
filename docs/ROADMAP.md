@@ -5,12 +5,12 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [x] Add CI and validate the repository (code checks passed with the committed lockfile; the PostgreSQL job is still being verified on the latest revision).
+- [x] Add CI and validate the repository (latest code run #291 passed both jobs).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
-- [x] Implement provider adapter interface (contract only; live adapters remain pending).
-- [x] Add gateway registry extension point and separate gateway identity from upstream provider identity (real gateway adapters remain pending).
+- [x] Implement provider adapter interface and a generic OpenAI-compatible HTTP adapter (a real provider/model has not yet been configured or called).
+- [x] Add gateway registry and generic OpenAI-compatible adapter/configuration; worker supports multiple explicitly configured gateway/model routes (no route is live until credentials and official free terms are verified).
 - [x] Add capability-aware route selection, priority ranking, and cooldown filtering (live health/quota feeds remain pending).
 - [x] Document a vendor-neutral gateway strategy and candidate integrations (candidates are not yet approved or connected).
 - [ ] Verify free-route eligibility from current official provider evidence.
@@ -23,13 +23,13 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 
 ## Stage 2 — Durable task engine
 - [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
-- [ ] Choose persistent database and queue based on verified free-tier terms and reliability (official free-tier comparison documented; Aiven and Neon shortlisted, but no provider selected or provisioned).
-- [ ] Implement durable worker leases, idempotency, checkpointing, and restart recovery (PostgreSQL adapters and CI integration tests exist; production provisioning and recovery drills remain pending).
+- [ ] Choose and provision a persistent database only after explicit owner approval (Aiven and Neon are shortlisted; no hosted database selected or provisioned).
+- [x] Implement PostgreSQL worker leases, atomic submission, idempotency, task checkpoints, and queue recovery semantics (verified in ephemeral PostgreSQL CI; production recovery drills remain pending).
 - [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
 
 ## Stage 3 — Sirfaraz and specialist agents
-- [ ] Implement Sirfaraz as the sole normal command interface.
+- [ ] Implement Sirfaraz as the sole normal command interface (HTTP task API exists; natural-language orchestration is still pending).
 - [ ] Build specialist contracts and scoped permissions.
 - [ ] Implement approval gates for sensitive actions.
 - [ ] Add the 15-agent roster and profile files.
@@ -47,7 +47,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Add CI: typecheck, build, tests, secret scan, dependency review.
 - [ ] Verify every push by fetching remote commit SHA and changed paths.
 - [x] Document database backup, recovery, and connection-pool operating procedures (runbook only; no live backup process is configured).
-- [x] Commit a Node 22 npm lockfile and switch both CI install steps to `npm ci` (typecheck, unit tests, build, lint, and audit passed on the code run; latest PostgreSQL integration job remains pending).
+- [x] Commit Node 22 npm lockfile and use `npm ci`; latest code run #291 passed both CI jobs.
 
 ## Stage 6 — Cloud hosting
 - [x] Compare current free-tier options, limits, sleep behavior, and storage durability (evaluation documented; no provider selected).
