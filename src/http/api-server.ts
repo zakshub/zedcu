@@ -131,7 +131,7 @@ export function createApiServer(options: ApiServerOptions): Server {
         return;
       }
 
-      const auditMatch = /^\\/v1\\/tasks\\/([^/]+)\\/audit$/.exec(url.pathname);
+      const auditMatch = /^\/v1\/tasks\/([^/]+)\/audit$/.exec(url.pathname);
       if (request.method === "GET" && auditMatch) {
         const task = await options.store.get(decodeURIComponent(auditMatch[1]!));
         if (!task) {
