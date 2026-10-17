@@ -7,10 +7,10 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 ## Implemented in this branch (code verified by run #215 unless noted)
 
 - Strict TypeScript project baseline and npm scripts.
-- Provider request/response contracts and normalized failure categories.
+- Provider request/response contracts, normalized failure categories, and a tested generic OpenAI-compatible chat-completions adapter with HTTPS enforcement for remote endpoints, server-side credentials, token usage extraction, normalized errors, and cancellation support.
 - Pluggable gateway registry with enable/disable metadata, protocol/capability descriptors, and duplicate-ID protection.
 - Capability-aware route selection with explicit priority ordering, cooldown filtering, and required task capabilities; the free-only policy remains the hard gate.
-- Gateway-neutral integration strategy covering OmniRoute, OpenRouter, direct providers, and candidate gateways such as LiteLLM, Bifrost, Portkey Gateway, New API, Agent Router / Envoy AI Gateway, Kong AI Gateway, and Cloudflare AI Gateway. Candidates are not approved or connected integrations.
+- Gateway-neutral integration strategy covering OmniRoute, OpenRouter, direct providers, and candidate gateways such as LiteLLM, Bifrost, Portkey Gateway, New API, Agent Router / Envoy AI Gateway, Kong AI Gateway, and Cloudflare AI Gateway. A generic OpenAI-compatible adapter is implemented; no specific real provider is yet configured or approved.
 - Free-route policy requiring explicit zero-cost evidence checked within 30 days.
 - Bounded fallback runner with per-route attempt records, duplicate-route prevention, retryable-failure handling, per-request timeout, cooperative cancellation signal, and fail-closed rejection when zero cost is not explicitly reported.
 - Guarded task-state transitions, task records, ordered audit events, a storage interface, and a single-process JSON store with atomic replacement, optimistic version checks, and restart-read tests.
@@ -27,27 +27,34 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 - Free-tier database comparison documented in `docs/FREE_TIER_DATABASE_EVALUATION.md`. Aiven and Neon are shortlisted for evaluation; no provider has been selected or provisioned.
 - Vitest upgraded after CI identified critical dependency advisories; the high-severity audit gate passes.
 
+
+- Authenticated HTTP API in `src/http/api-server.ts` with liveness/readiness, idempotency-keyed task submission, task listing/inspection, constrained pause/resume/cancel/approval actions, constant-time bearer-token comparison, JSON size limits, and safe error responses.
+- Runtime API entry point `src/http/main.ts` and PostgreSQL-backed worker entry point `src/worker/main.ts`; scripts are `npm start` and `npm run start:worker`.
+- Worker supports a configurable list of OpenAI-compatible routes with explicit zero-cost metadata, recent HTTPS evidence links, priority order, and bounded fallback; routes are refused unless the operator explicitly confirms free eligibility and zero cost.
+- Task submission now resolves repeated idempotency keys to the original task when the request matches and returns a conflict for a different request. Unit tests cover this behavior.
+- `docs/QUICKSTART.md` describes runtime setup, migrations, API usage, route configuration, and limitations. No hosted database or deployment is provisioned.
+
 ## Verification boundary
 
-Run #231 passed both jobs on commit `50b22ed44c1a7601624972355cd17d9b0a928e34`: `npm ci`, dependency audit threshold, typecheck, all 51 unit tests, build, lint, PostgreSQL migration/schema checks, and four live PostgreSQL integration tests. Run #215 also passed the earlier code baseline. Subsequent commits are documentation-only; their own CI runs are in progress.
+Run #291 passed both jobs on commit `8c5766948d7832bede674eabdc65f6dc592100c`: `npm ci`, dependency audit threshold, typecheck, 69 unit tests, build, lint, PostgreSQL migration/schema checks, and four live PostgreSQL integration tests. This verifies the API, worker, and multi-route adapter code. Later documentation-only commits have separate CI runs.
 
 The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred.
 
 ## Important limitations
 
-No production database is provisioned, and there is no scheduled/automated backup process, cloud deployment, or real provider API integration. A production application must configure its PostgreSQL pool using environment settings. A provider-reported zero cost is not independent billing proof. `docs/OPERATIONS_BACKUP_RECOVERY.md` documents the required operator procedure and readiness checklist; it does not mean backups are configured or running.
+No production database is provisioned, and there is no scheduled/automated backup process or cloud deployment. The generic HTTP adapter is implemented, but no real provider/model credentials or live model call have been configured or tested. A production application must configure its PostgreSQL pool using environment settings. A provider-reported zero cost is not independent billing proof. `docs/OPERATIONS_BACKUP_RECOVERY.md` documents the required operator procedure and readiness checklist; it does not mean backups are configured or running.
 
 The repository-wide Prettier check was removed from CI because it failed on 45 existing baseline files, including agent profiles and docs. The `format:check` script remains available for a later controlled formatting pass; formatting is not currently a CI gate.
 
 ## Not implemented yet
 
 - Production database provisioning and tested automated backups/disaster recovery.
-- Real provider API adapters and independent cost/usage reconciliation.
+- A verified live provider/model configuration and independent cost/usage reconciliation.
 - Sirfaraz orchestration and specialist execution.
 - Separate read-only Raza monitoring service.
 - Authenticated GitHub automation, cloud deployment, mobile dashboard, and notifications.
 
-## Latest work (2026-10-16)
+## Latest work (2026-10-17)
 
 - Added PostgreSQL schema migration and PostgreSQL 16 CI validation.
 - Added PostgreSQL queue and TaskStore adapters, including atomic `createQueued()`.
