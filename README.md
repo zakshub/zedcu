@@ -36,11 +36,11 @@ See [docs/AGENTS.md](docs/AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.m
 ## Staged delivery
 
 - Stage 0: versioned plan and governance baseline.
-- Stage 1: reliable free-only model routing with failure classification and tests.
-- Stage 2: durable task store, queue worker, checkpoints, and recovery.
-- Stage 3: Sirfaraz command orchestration and scoped specialist agents.
-- Stage 4: independent evidence-based monitor, CI, GitHub reporting, audit logs.
-- Stage 5: cloud runtime and secure mobile-friendly dashboard.
+- Stage 1: provider contracts, generic OpenAI-compatible adapter, and configurable free-only multi-route worker foundation (real route configuration and provider terms still need owner verification).
+- Stage 2: PostgreSQL task store/queue, worker leases, atomic submission, checkpoints, and CI integration tests are implemented; production database provisioning and restore drills remain pending.
+- Stage 3: Sirfaraz command orchestration and scoped specialist agents remain pending.
+- Stage 4: CI, audit records, and basic authenticated task API exist; the independent Raza monitor and authenticated GitHub execution remain pending.
+- Stage 5: API/worker entry points exist for self-hosting; cloud deployment and secure mobile-friendly dashboard remain pending.
 
 Do not skip cloud deployment before routing, persistence, monitoring, and security foundations work.
 
