@@ -32,11 +32,12 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 - Runtime API entry point `src/http/main.ts` and PostgreSQL-backed worker entry point `src/worker/main.ts`; scripts are `npm start` and `npm run start:worker`.
 - Worker supports a configurable list of OpenAI-compatible routes with explicit zero-cost metadata, recent HTTPS evidence links, priority order, and bounded fallback; routes are refused unless the operator explicitly confirms free eligibility and zero cost.
 - Task submission now resolves repeated idempotency keys to the original task when the request matches and returns a conflict for a different request. Unit tests cover this behavior.
-- `src/http/dashboard.ts` adds a responsive task-control UI for token-based connection, task submission, history, checkpoints, and allowed state actions; the token is held only in page memory. Dashboard delivery/CSP tests pass.\n- `docs/QUICKSTART.md` describes runtime setup, migrations, API usage, route configuration, dashboard access, and limitations. No hosted database or deployment is provisioned.
+- `src/http/dashboard.ts` adds a responsive task-control UI for token-based connection, task submission, history, checkpoints, allowed state actions, and a read-only Raza audit button; the token is held only in page memory. Dashboard delivery/CSP and audit endpoint tests pass.
+- `src/audit/raza-monitor.ts` adds a read-only invariant audit of task/event/checkpoint records and exposes it through the authenticated API. This is an initial audit module, not yet a separate service or an independent check of GitHub/CI evidence.\n- `docs/QUICKSTART.md` describes runtime setup, migrations, API usage, route configuration, dashboard access, and limitations. No hosted database or deployment is provisioned.
 
 ## Verification boundary
 
-Run #342 passed both jobs on code commit `743e84b193be123dc677676ec00688f68719ec1f`: `npm ci`, dependency audit threshold, typecheck, 76 unit tests, build, lint, PostgreSQL migration/schema checks, and five live PostgreSQL integration tests. This verifies the API, dashboard, worker, multi-route adapter, idempotency behavior, and atomic resume/re-queue. Later documentation-only commits have separate CI runs.
+Run #362 passed both jobs on code commit `45f9bbfd3498047d8733612e9874d663486bfb57`: `npm ci`, dependency audit threshold, typecheck, 81 unit tests, build, lint, PostgreSQL migration/schema checks, and five live PostgreSQL integration tests. This verifies the API, dashboard, worker, multi-route adapter, idempotency behavior, atomic resume/re-queue, and the read-only task-record audit endpoint. Later documentation-only commits have separate CI runs.
 
 The tests use an ephemeral CI database, not a provisioned production database. No cloud deployment has occurred.
 
