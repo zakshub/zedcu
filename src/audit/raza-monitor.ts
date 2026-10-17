@@ -90,9 +90,10 @@ export function auditTaskRecord(task: TaskRecord, checkedAt = new Date()): TaskA
     add("invalid_audit_time", "error", "Audit check time is invalid.");
   }
 
+  const validCheckTime = !Number.isNaN(checkedAt.getTime());
   return {
     taskId: task.id,
-    checkedAt: checkedAt.toISOString(),
+    checkedAt: validCheckTime ? checkedAt.toISOString() : "invalid",
     passed: !findings.some((finding) => finding.severity === "error"),
     findings
   };
