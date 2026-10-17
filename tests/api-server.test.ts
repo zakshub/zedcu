@@ -47,6 +47,19 @@ afterEach(async () => {
 });
 
 describe("authenticated task HTTP API", () => {
+  it("exposes read-only Raza audit findings for a saved task", async () => {
+    const store = new MemoryStore();
+    const service = new TaskService(store);
+    const task = await service.create("Audit this task record");
+    const { baseUrl } = await startApi({ store, service, bearerToken: token });
+    const response = await fetch(baseUrl + "/v1/tasks/" + encodeURIComponent(task.id) + "/audit", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { audit: { taskId: string; passed: boolean; findings: unknown[] } };
+    expect(body.audit).toMatchObject({ taskId: task.id, passed: true, findings: [] });
+  });
+
   it("serves the responsive dashboard with a restrictive same-origin content policy", async () => {
     const { baseUrl } = await startApi({ store: new MemoryStore(), bearerToken: token });
     const response = await fetch(baseUrl + "/");
