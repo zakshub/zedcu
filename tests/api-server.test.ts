@@ -1,4 +1,3 @@
-import { createServer as createNodeServer } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApiServer } from "../src/http/api-server.js";
 import type { TaskRecord, TaskStore } from "../src/tasks/task-record.js";
