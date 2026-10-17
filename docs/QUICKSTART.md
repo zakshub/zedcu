@@ -96,6 +96,6 @@ The worker's output is stored as a checkpoint in the task record. Never expose t
 - No hosting or database is provisioned by this repository.
 - A basic responsive control dashboard is included, but there are no user accounts or role-based multi-user auth. Sirfaraz, specialist agent execution, and the separate Raza monitor remain unfinished.
 - The API uses one bearer token; this is a starter control plane, not a complete multi-user identity system.
-- The worker uses one configured model route; it is not yet an automatic multi-gateway router.
+- The worker supports multiple configured OpenAI-compatible routes; native provider protocols need separate adapters.
 - No automated production backups are configured. Complete a tested restore drill before storing important data.
-- No cloud deployment or production-readiness claim is implied by local startup instructions.
+- Pause/cancel changes are checked after the current model request returns; they do not forcibly abort every in-flight upstream request yet.\n- No cloud deployment or production-readiness claim is implied by local startup instructions.
