@@ -5,36 +5,39 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 ## Stage 0 — Project truth and governance
 - [x] Verify repository identity and default branch.
 - [x] Establish project direction, architecture, roster, cost policy, security baseline, decisions, and status.
-- [ ] Add CI and validate the repository.
+- [x] Add CI and validate the repository (latest code run #291 passed both jobs).
 - [ ] Recover old local work if it is later found; never claim this baseline recovered it.
 
 ## Stage 1 — Reliable free-only model routing
-- [ ] Implement provider adapter interface.
+- [x] Implement provider adapter interface and a generic OpenAI-compatible HTTP adapter (a real provider/model has not yet been configured or called).
+- [x] Add gateway registry and generic OpenAI-compatible adapter/configuration; worker supports multiple explicitly configured gateway/model routes (no route is live until credentials and official free terms are verified).
+- [x] Add capability-aware route selection, priority ranking, and cooldown filtering (live health/quota feeds remain pending).
+- [x] Document a vendor-neutral gateway strategy and candidate integrations (candidates are not yet approved or connected).
 - [ ] Verify free-route eligibility from current official provider evidence.
-- [ ] Maintain a strict allowlist; reject unknown or paid routes before network calls.
-- [ ] Track attempted routes per task.
-- [ ] Classify quota, rate-limit, auth, timeout, and transient failures.
-- [ ] Add bounded retry/backoff and cancellation.
+- [x] Implement policy gate that rejects unknown or paid routes before adapter invocation (official evidence verification and live routing remain pending).
+- [x] Track attempted routes within a bounded fallback run (durable per-task attempt ledger remains pending).
+- [x] Define normalized failure categories for quota, rate-limit, auth, timeout, and transient failures.
+- [ ] Add bounded retry/backoff and cancellation (bounded alternate-route attempts exist; backoff and cancellation wiring remain pending).
 - [ ] Record token usage and cost evidence; pause on ambiguity.
-- [ ] Unit-test every policy branch.
+- [x] Add unit tests for free-route policy, fallback, task state, persistence, and checkpoint behavior (expand coverage as integration grows).
 
 ## Stage 2 — Durable task engine
-- [ ] Define task/event/checkpoint/approval/artifact schemas.
-- [ ] Choose persistent database and queue based on verified free-tier terms and reliability.
-- [ ] Implement worker leases, idempotency, checkpointing, and restart recovery.
-- [ ] Implement queued/running/paused/waiting-approval/failed/completed/cancelled states.
+- [ ] Define complete task/event/checkpoint/approval/artifact schemas (task, audit-event, and checkpoint record foundations exist; approval/artifact schemas remain pending).
+- [ ] Choose and provision a persistent database only after explicit owner approval (Aiven and Neon are shortlisted; no hosted database selected or provisioned).
+- [x] Implement PostgreSQL worker leases, atomic submission, idempotency, task checkpoints, and queue recovery semantics (verified in ephemeral PostgreSQL CI; production recovery drills remain pending).
+- [x] Implement validated task state transitions, including planning, dispatch, queued, running, paused, waiting-approval, failed, completed, and cancelled.
 - [ ] Add safe cancellation and task timeouts.
 
 ## Stage 3 — Sirfaraz and specialist agents
-- [ ] Implement Sirfaraz as the sole normal command interface.
+- [ ] Implement Sirfaraz as the sole normal command interface (HTTP task API exists; natural-language orchestration is still pending).
 - [ ] Build specialist contracts and scoped permissions.
 - [ ] Implement approval gates for sensitive actions.
 - [ ] Add the 15-agent roster and profile files.
 - [ ] Ensure every task has acceptance criteria and expected artifacts.
 
 ## Stage 4 — Independent monitoring and audit
-- [ ] Build Progress Monitor as a separate read-only service/role.
-- [ ] Verify file diffs, commits, test exit codes, and runtime evidence.
+- [x] Add initial read-only task/event/checkpoint invariant auditor and API endpoint (module-level Raza baseline only).\n- [ ] Build Progress Monitor as a separate read-only service/role with its own execution boundary.
+- [ ] Verify file diffs, commits, test exit codes, and runtime evidence independently (the current Raza module only checks persisted task-record invariants).
 - [ ] Detect mismatch between reported and observed status.
 - [ ] Report discrepancies directly to Zak.
 - [ ] Add append-only task events and notifications.
@@ -43,22 +46,23 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Implement authenticated GitHub issue/branch/commit/report operations.
 - [ ] Add CI: typecheck, build, tests, secret scan, dependency review.
 - [ ] Verify every push by fetching remote commit SHA and changed paths.
-- [ ] Document local setup and recovery.
+- [x] Document database backup, recovery, and connection-pool operating procedures (runbook only; no live backup process is configured).
+- [x] Commit Node 22 npm lockfile and use `npm ci`; latest code run #291 passed both CI jobs.
 
 ## Stage 6 — Cloud hosting
-- [ ] Compare current free-tier options, limits, sleep behavior, and storage durability.
+- [x] Compare current free-tier options, limits, sleep behavior, and storage durability (evaluation documented; no provider selected).
 - [ ] Select hosting only after validating queue/database support and security.
 - [ ] Deploy worker and API with health checks, logs, backups, and rollback.
 - [ ] Ensure operation continues when Zak's laptop and phone are off.
 - [ ] No deployment before explicit approval.
 
 ## Stage 7 — Mobile-friendly control dashboard
-- [ ] Task submission and task history.
-- [ ] Live status, logs, artifacts, diffs, test results, and provider attempts.
-- [ ] Approval inbox for gated actions.
-- [ ] Pause/resume/cancel/retry controls.
+- [x] Basic task submission, task history, checkpoint inspection, and Raza record audit (responsive starter dashboard; advanced filtering remains pending).
+- [ ] Live status, detailed logs, artifacts, diffs, test results, and provider attempts (current dashboard shows saved task state and latest checkpoint).
+- [ ] Approval inbox for gated actions (basic approval action endpoint exists, but approval workflow/policy remains pending).
+- [x] Basic pause/resume/cancel actions for valid task states (retry UX and end-to-end worker control remain pending).
 - [ ] Spend/usage visibility and clear $0-policy stop messages.
-- [ ] Secure login, responsive design, accessible status feedback.
+- [x] Responsive layout and basic status feedback.\n- [ ] Production-grade secure login, user accounts, role-based permissions, and accessible full-state feedback.
 
 ## Release criteria
 

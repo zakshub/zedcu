@@ -1,34 +1,53 @@
 # ZEDCU Status
 
-**Date:** 2026-10-15  
+**Updated:** 2026-10-17  
 **Repository:** `zakshub/zedcu`  
-**Default branch:** `main`
+**Default branch:** `main`  
+**Implementation branch:** `feat/phase-1-runtime-baseline`  
+**Pull request:** [#2 — Phase 1 runtime foundation](https://github.com/zakshub/zedcu/pull/2) — draft, not merged
 
-## Current baseline
+## Latest verified code
 
-The project direction, architecture, agent roster, 15 individual agent profiles, zero-spend policy, security baseline, roadmap, implementation specification, and decisions have been committed to GitHub and fetched back for verification. These are planning documents, not a runnable product.
+GitHub Actions run [#362](https://github.com/zakshub/zedcu/actions/runs/39053974534) passed both jobs on code commit `45f9bbfd3498047d8733612e9874d663486bfb57`:
+- 81 unit tests passed.
+- TypeScript typecheck, build, lint, and high-severity dependency audit passed.
+- PostgreSQL 16 schema/migration checks and five live integration tests passed, including atomic queue reactivation on resume.
 
-## Runtime not yet implemented or verified
+Subsequent commits update documentation only and are being checked separately.
 
-- Runnable agent runtime or Sirfaraz dispatcher.
-- Actual provider API integration or automatic model fallback.
-- Task database, queue, checkpoint persistence, or recovery.
-- Independent scheduled Progress Monitor.
-- Authenticated GitHub automation from a running application.
-- Executable agent profile configurations.
-- CI, unit tests, typecheck, or build.
-- Cloud deployment, persistent hosting, mobile dashboard, or notifications.
-- Current free-tier availability and terms for any provider.
-- Proof that the system runs while personal devices are offline.
+## Implemented
 
-## Next actions
+- Strict TypeScript baseline, Node 22 lockfile, and deterministic `npm ci` CI installs.
+- Provider contracts, free-only route policy, gateway registry, capability/priority routing, bounded fallback, and a generic OpenAI-compatible adapter.
+- Multi-route worker configuration with server-side secrets, per-route evidence metadata, priority order, bounded fallback, and shutdown draining.
+- PostgreSQL TaskStore and durable queue with leases, idempotency, audit events, checkpoints, atomic task + queue submission, and atomic re-queue on resume.
+- Authenticated HTTP task API with health/readiness, idempotent task submission, listing, inspection, and constrained state actions.
+- Basic responsive control dashboard served by the API. It supports token-based connection, task submission, history, checkpoint inspection, task actions, and a read-only Raza task-record audit. The token remains in page memory rather than browser storage.
+- Initial read-only Raza audit module and endpoint checks event/checkpoint sequences and consistency with the current task state. This is not yet a separate independent service and does not verify external GitHub/CI evidence.
+- PostgreSQL-backed worker entry point and runtime start scripts.
+- Backup/recovery runbook, free-tier database comparison, and runtime quick-start instructions.
 
-1. Start the implementation baseline: project skeleton, dependency lockfile, CI, lint, typecheck, build, and tests.
-2. Implement free-only provider routing and policy tests before orchestration.
-3. Build durable task persistence, checkpoint recovery, and independent monitoring.
-4. Implement Sirfaraz and scoped specialist dispatch.
-5. Evaluate hosting and dashboard options only after foundations work and with explicit approval.
+## Not yet implemented or verified
 
-## Truth standard
+- No persistent hosted database or cloud runtime has been provisioned; no deployment has occurred.
+- No live model/provider has been configured or called; route free status remains operator-attested, not independently checked against live billing.
+- No scheduled backup or successful production restore drill.
+- Sirfaraz's natural-language command/orchestration layer and all 15 specialist execution roles are not implemented.
+- Raza's separate read-only verification service is not implemented; only the initial read-only task-record auditor exists.
+- No authenticated GitHub execution workflow, notifications, multi-user accounts, or role-based permissions.
+- The current adapter supports OpenAI-compatible chat completions; native-provider protocols need their own adapters.
+- A single bearer token is starter authentication, not a production identity/permission system.
+- Pause/cancel state changes are checked after the current model request returns; this is not yet hard cancellation of an in-flight upstream request.
 
-Report each feature as one of: planned, implemented, tested, deployed, independently verified. Never merge these statuses into a vague claim of completion.
+## Immediate next steps
+
+1. Verify the latest documentation-only CI runs.
+2. Test API + worker together against an approved disposable PostgreSQL instance.
+3. Verify official free-tier terms for at least two concrete models before configuring route entries.
+4. Add a full end-to-end worker test with mocked gateways and improve in-flight cancellation semantics.
+5. Implement Sirfaraz task planning and specialist dispatch, then build Raza as a separate read-only service that independently checks repository/CI evidence.
+6. Only after explicit approval, select a host, configure secrets, perform a restore drill, and deploy. Do not merge PR #2 or provision paid services without Zak's approval.
+
+## Financial and safety policy
+
+No paid fallback, credit purchases, automatic upgrades, or unapproved deployment. If free eligibility or cost is uncertain, do not run the route. Do not commit secrets. A passing CI run is evidence of code checks, not proof of production deployment or a guarantee of zero upstream billing.
