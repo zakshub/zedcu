@@ -80,7 +80,7 @@ function renderTask(task) {
   const actions = document.createElement("div"); actions.className = "task-actions";
   if (task.state === "queued") actions.append(button("Cancel", task.id, "cancel"));
   if (task.state === "running" || task.state === "planning") actions.append(button("Pause", task.id, "pause"), button("Cancel", task.id, "cancel"));
-  if (task.state === "paused" || task.state === "failed") actions.append(button("Resume", task.id, "resume"), button("Cancel", "cancel", task.id, "cancel"));
+  if (task.state === "paused" || task.state === "failed") actions.append(button("Resume", task.id, "resume"), button("Cancel", task.id, "cancel"));
   if (task.state === "waiting_for_approval") actions.append(button("Approve", task.id, "approval_granted"), button("Deny", task.id, "approval_denied"));
   if (actions.childElementCount) card.append(actions);
   const checkpoint = task.checkpoints && task.checkpoints[task.checkpoints.length - 1];
