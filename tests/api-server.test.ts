@@ -5,6 +5,7 @@ import { TaskService } from "../src/tasks/task-service.js";
 
 class MemoryStore implements TaskStore {
   private readonly records = new Map<string, TaskRecord>();
+  private readonly idempotency = new Map<string, string>();
   async create(task: TaskRecord): Promise<void> { this.records.set(task.id, structuredClone(task)); }
   async get(id: string): Promise<TaskRecord | null> {
     const task = this.records.get(id);
@@ -16,8 +17,13 @@ class MemoryStore implements TaskStore {
     if (!current || current.version !== expectedVersion) throw new Error("version conflict");
     this.records.set(task.id, structuredClone(task));
   }
+  async getByIdempotencyKey(key: string) {
+    const id = this.idempotency.get(key);
+    return id ? this.get(id) : null;
+  }
   async createQueued(task: TaskRecord, idempotencyKey: string) {
     await this.create(task);
+    this.idempotency.set(idempotencyKey, task.id);
     return { taskId: task.id, idempotencyKey, enqueuedAt: task.createdAt, attempts: 0 };
   }
 }
@@ -91,6 +97,29 @@ describe("authenticated task HTTP API", () => {
       body: JSON.stringify({ request: "x".repeat(70_000) })
     });
     expect(oversized.status).toBe(413);
+  });
+
+  it("returns the same task for repeated idempotent submissions and conflicts on changed payload", async () => {
+    const store = new MemoryStore();
+    const { baseUrl } = await startApi({ store, service: new TaskService(store), bearerToken: token });
+    const submit = (request: string) => fetch(`${baseUrl}/v1/tasks`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": "same-key"
+      },
+      body: JSON.stringify({ request })
+    });
+    const first = await submit("same request");
+    const firstBody = await first.json() as { task: TaskRecord };
+    const repeated = await submit("same request");
+    const repeatedBody = await repeated.json() as { task: TaskRecord };
+    expect(first.status).toBe(202);
+    expect(repeated.status).toBe(202);
+    expect(repeatedBody.task.id).toBe(firstBody.task.id);
+    expect((await submit("different request")).status).toBe(409);
+    expect(await store.list()).toHaveLength(1);
   });
 
   it("requires a sufficiently long server token", () => {
