@@ -5,6 +5,7 @@ import { TaskService, TaskNotFoundError } from "../tasks/task-service.js";
 import { TaskConflictError } from "../tasks/json-task-store.js";
 import { InvalidTaskTransitionError, type TaskEvent } from "../tasks/task-state.js";
 import { DASHBOARD_CSS, DASHBOARD_HTML, DASHBOARD_JS } from "./dashboard.js";
+import { auditTaskRecord } from "../audit/raza-monitor.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const ALLOWED_ACTIONS = new Set<TaskEvent>(["pause", "resume", "cancel", "approval_granted", "approval_denied"]);
@@ -127,6 +128,17 @@ export function createApiServer(options: ApiServerOptions): Server {
 
       if (request.method === "GET" && url.pathname === "/v1/tasks") {
         send(response, 200, { tasks: await options.store.list() });
+        return;
+      }
+
+      const auditMatch = /^\\/v1\\/tasks\\/([^/]+)\\/audit$/.exec(url.pathname);
+      if (request.method === "GET" && auditMatch) {
+        const task = await options.store.get(decodeURIComponent(auditMatch[1]!));
+        if (!task) {
+          send(response, 404, { error: "task_not_found" });
+          return;
+        }
+        send(response, 200, { audit: auditTaskRecord(task) });
         return;
       }
 
