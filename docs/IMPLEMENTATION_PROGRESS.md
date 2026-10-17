@@ -1,10 +1,10 @@
 # Implementation Progress
 
-Updated: 2026-10-16
+Updated: 2026-10-17
 
-GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145df1164f4ca1c`. The runtime checks passed typecheck, all 51 unit tests, build, lint, and the high-severity dependency audit gate. The PostgreSQL 16 service job passed migration/schema checks and four live integration tests. Documentation-only run #218 also passed both jobs. Run #231 passed both jobs on commit `50b22ed44c1a7601624972355cd17d9b0a928e34` after committing the Node 22 lockfile and switching CI to `npm ci`.
+GitHub Actions run #362 passed both jobs on code commit `45f9bbfd3498047d8733612e9874d663486bfb57`: 81 unit tests, typecheck, build, lint, high-severity dependency audit, PostgreSQL schema checks, and five live PostgreSQL integration tests. This verifies the authenticated API, responsive dashboard, generic multi-route worker, idempotent task submission, atomic resume/re-queue, and initial read-only Raza task-record audit. Later commits update documentation only; their CI runs are in progress.
 
-## Implemented in this branch (code verified by run #215 unless noted)
+## Implemented in this branch (latest code verification: run #362)
 
 - Strict TypeScript project baseline and npm scripts.
 - Provider request/response contracts, normalized failure categories, and a tested generic OpenAI-compatible chat-completions adapter with HTTPS enforcement for remote endpoints, server-side credentials, token usage extraction, normalized errors, and cancellation support.
@@ -34,6 +34,12 @@ GitHub Actions run #215 passed both jobs on commit `91e58658ec5232613cc6642ec145
 - Task submission now resolves repeated idempotency keys to the original task when the request matches and returns a conflict for a different request. Unit tests cover this behavior.
 - `src/http/dashboard.ts` adds a responsive task-control UI for token-based connection, task submission, history, checkpoints, allowed state actions, and a read-only Raza audit button; the token is held only in page memory. Dashboard delivery/CSP and audit endpoint tests pass.
 - `src/audit/raza-monitor.ts` adds a read-only invariant audit of task/event/checkpoint records and exposes it through the authenticated API. This is an initial audit module, not yet a separate service or an independent check of GitHub/CI evidence.\n- `docs/QUICKSTART.md` describes runtime setup, migrations, API usage, route configuration, dashboard access, and limitations. No hosted database or deployment is provisioned.
+
+- Authenticated HTTP API in `src/http/api-server.ts` with liveness/readiness, idempotency-keyed task submission, task listing/inspection, constrained pause/resume/cancel/approval actions, constant-time bearer-token comparison, JSON size limits, safe error responses, and a same-origin responsive dashboard with restrictive content-security policy.
+- `src/http/dashboard.ts` adds token-based connection, task submission, history, checkpoint inspection, allowed state actions, and a read-only Raza audit button. The token stays in page memory rather than browser storage.
+- `src/audit/raza-monitor.ts` adds a read-only invariant audit of task/event/checkpoint records and exposes it through the authenticated API. This is an initial audit module, not yet a separate service or an independent check of GitHub/CI evidence.
+- PostgreSQL-backed worker supports multiple explicitly configured OpenAI-compatible routes, priority ordering, bounded fallback, and graceful shutdown. Paused/failed task resume atomically reactivates the durable queue entry.
+- `docs/QUICKSTART.md` describes runtime setup, migrations, API usage, dashboard access, route configuration, and current limitations. No hosted database or deployment is provisioned.
 
 ## Verification boundary
 
