@@ -183,6 +183,21 @@ export class PostgresTaskStore implements TaskStore {
     }
   }
 
+  async getByIdempotencyKey(idempotencyKey: string): Promise<TaskRecord | null> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query<{ task_id: string }>(
+        "SELECT task_id FROM zedcu_task_queue WHERE idempotency_key = $1",
+        [idempotencyKey]
+      );
+      const taskId = result.rows[0]?.task_id;
+      if (!taskId) return null;
+      return await this.get(taskId);
+    } finally {
+      client.release();
+    }
+  }
+
   async get(taskId: string): Promise<TaskRecord | null> {
     const client = await this.pool.connect();
     try {
