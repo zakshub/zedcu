@@ -138,9 +138,9 @@ async function loop(): Promise<void> {
   active = true;
   try {
     const didWork = await processOne();
-    if (!stopping) setTimeout(() => void loop(), didWork ? 0 : 1_000).unref();
+    if (!stopping) setTimeout(() => void loop(), didWork ? 0 : 1_000);
   } catch {
-    if (!stopping) setTimeout(() => void loop(), 3_000).unref();
+    if (!stopping) setTimeout(() => void loop(), 3_000);
   } finally {
     active = false;
   }
