@@ -6,6 +6,14 @@ import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
 
+function positiveInteger(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) throw new Error(`${name} must be a positive integer.`);
+  return value;
+}
+
 const { routes, adapters } = buildWorkerRoutes(parseWorkerRouteConfig());
 const pool = createPostgresPool();
 const store = new PostgresTaskStore(pool);
