@@ -36,8 +36,8 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Ensure every task has acceptance criteria and expected artifacts.
 
 ## Stage 4 — Independent monitoring and audit
-- [ ] Build Progress Monitor as a separate read-only service/role.
-- [ ] Verify file diffs, commits, test exit codes, and runtime evidence.
+- [x] Add initial read-only task/event/checkpoint invariant auditor and API endpoint (module-level Raza baseline only).\n- [ ] Build Progress Monitor as a separate read-only service/role with its own execution boundary.
+- [ ] Verify file diffs, commits, test exit codes, and runtime evidence independently (the current Raza module only checks persisted task-record invariants).
 - [ ] Detect mismatch between reported and observed status.
 - [ ] Report discrepancies directly to Zak.
 - [ ] Add append-only task events and notifications.
@@ -57,7 +57,7 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] No deployment before explicit approval.
 
 ## Stage 7 — Mobile-friendly control dashboard
-- [x] Basic task submission and task history (responsive starter dashboard; advanced filtering remains pending).
+- [x] Basic task submission, task history, checkpoint inspection, and Raza record audit (responsive starter dashboard; advanced filtering remains pending).
 - [ ] Live status, detailed logs, artifacts, diffs, test results, and provider attempts (current dashboard shows saved task state and latest checkpoint).
 - [ ] Approval inbox for gated actions (basic approval action endpoint exists, but approval workflow/policy remains pending).
 - [x] Basic pause/resume/cancel actions for valid task states (retry UX and end-to-end worker control remain pending).
