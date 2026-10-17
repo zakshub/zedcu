@@ -47,6 +47,17 @@ afterEach(async () => {
 });
 
 describe("authenticated task HTTP API", () => {
+  it("serves the responsive dashboard with a restrictive same-origin content policy", async () => {
+    const { baseUrl } = await startApi({ store: new MemoryStore(), bearerToken: token });
+    const response = await fetch(baseUrl + "/");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(response.headers.get("content-security-policy")).toContain("script-src 'self'");
+    expect(await response.text()).toContain("ZEDCU Control");
+    expect((await fetch(baseUrl + "/dashboard.js")).status).toBe(200);
+    expect((await fetch(baseUrl + "/dashboard.css")).status).toBe(200);
+  });
+
   it("exposes process health without exposing protected task data", async () => {
     const store = new MemoryStore();
     const { baseUrl } = await startApi({ store, bearerToken: token });
