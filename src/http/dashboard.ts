@@ -53,7 +53,7 @@ async function api(path, options = {}) {
   if (!response.ok) throw new Error(payload.error || "Request failed (" + response.status + ")");
   return payload;
 }
-function button(label, action, taskId, eventName) {
+function button(label, taskId, eventName) {
   const b = document.createElement("button");
   b.type = "button"; b.textContent = label;
   b.addEventListener("click", async () => {
@@ -78,10 +78,10 @@ function renderTask(task) {
   const version = document.createElement("span"); version.textContent = "Revision " + task.version;
   meta.append(created, version); card.append(meta);
   const actions = document.createElement("div"); actions.className = "task-actions";
-  if (task.state === "queued") actions.append(button("Cancel", "cancel", task.id, "cancel"));
-  if (task.state === "running" || task.state === "planning") actions.append(button("Pause", "pause", task.id, "pause"), button("Cancel", "cancel", task.id, "cancel"));
-  if (task.state === "paused" || task.state === "failed") actions.append(button("Resume", "resume", task.id, "resume"), button("Cancel", "cancel", task.id, "cancel"));
-  if (task.state === "waiting_for_approval") actions.append(button("Approve", "approval_granted", task.id, "approval_granted"), button("Deny", "approval_denied", task.id, "approval_denied"));
+  if (task.state === "queued") actions.append(button("Cancel", task.id, "cancel"));
+  if (task.state === "running" || task.state === "planning") actions.append(button("Pause", task.id, "pause"), button("Cancel", "cancel", task.id, "cancel"));
+  if (task.state === "paused" || task.state === "failed") actions.append(button("Resume", task.id, "resume"), button("Cancel", "cancel", task.id, "cancel"));
+  if (task.state === "waiting_for_approval") actions.append(button("Approve", task.id, "approval_granted"), button("Deny", task.id, "approval_denied"));
   if (actions.childElementCount) card.append(actions);
   const checkpoint = task.checkpoints && task.checkpoints[task.checkpoints.length - 1];
   if (checkpoint) {
