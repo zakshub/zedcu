@@ -27,6 +27,10 @@ Subsequent commits update documentation only and are being checked separately.
 - PostgreSQL-backed worker entry point and runtime start scripts.
 - Backup/recovery runbook, free-tier database comparison, and runtime quick-start instructions.
 
+## Latest engineering change in progress
+
+- Added a durable task-state cancellation watcher for active provider requests. The worker now aborts the upstream request when the task is paused/cancelled or when task state cannot be verified, rather than waiting for the model request timeout. New focused tests cover cancellation, normal running state, and database-read failure. CI must pass before this change is considered verified.
+
 ## Not yet implemented or verified
 
 - No persistent hosted database or cloud runtime has been provisioned; no deployment has occurred.
