@@ -5,6 +5,7 @@ import { PostgresTaskQueue } from "../tasks/postgres-task-queue.js";
 import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
+import { watchTaskCancellation } from "./task-cancellation.js";
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -37,9 +38,15 @@ async function processOne(): Promise<boolean> {
     return true;
   }
 
+  let stopCancellationWatch: (() => void) | undefined;
   try {
     await service.apply(task.id, "start");
     await service.apply(task.id, "dispatch");
+    const requestController = new AbortController();
+    stopCancellationWatch = watchTaskCancellation(async () => {
+      const latest = await store.get(task.id);
+      return latest?.state ?? null;
+    }, requestController);
     const result = await runWithFreeFallback(
       routes,
       adapters,
@@ -47,10 +54,13 @@ async function processOne(): Promise<boolean> {
         taskId: task.id,
         prompt: task.request,
         maxOutputTokens: positiveInteger("ZEDCU_MAX_OUTPUT_TOKENS", 1024),
-        timeoutMs: requestTimeoutMs
+        timeoutMs: requestTimeoutMs,
+        signal: requestController.signal
       },
       { maxAttempts: routes.length }
     );
+    stopCancellationWatch();
+    stopCancellationWatch = undefined;
 
     const latestTask = await store.get(task.id);
     if (!latestTask || latestTask.state !== "running") {
@@ -83,6 +93,7 @@ async function processOne(): Promise<boolean> {
     console.warn(JSON.stringify({ event: "task_paused", taskId: task.id, reason: result.reason }));
     return true;
   } catch (error) {
+    stopCancellationWatch?.();
     try {
       const current = await store.get(task.id);
       if (current && (current.state === "planning" || current.state === "running")) {
