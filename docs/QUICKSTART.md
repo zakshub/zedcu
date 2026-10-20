@@ -1,6 +1,6 @@
 # ZEDCU Runtime Quick Start
 
-This is a self-hostable API + worker baseline. It is not yet the complete Sirfaraz multi-agent system or mobile dashboard. No database host, model account, or deployment is created automatically by these instructions.
+This is a self-hostable API + worker baseline with a deterministic Sirfaraz planning preview and a read-only Raza GitHub evidence endpoint. It is not yet the complete multi-agent runtime or separately deployed monitor. No database host, model account, or deployment is created automatically by these instructions.
 
 ## Requirements
 
@@ -39,7 +39,7 @@ Start the API:
 npm start
 ```
 
-Open `http://localhost:8080/` for the responsive control dashboard. Paste the server token in the connection field; it stays in page memory and is not written to browser storage. Each task also offers a read-only Raza audit that checks persisted task/event/checkpoint consistency. It is an initial record-invariant check, not yet the separate independent cloud auditor or a check of external GitHub/CI evidence.
+Open `http://localhost:8080/` for the responsive control dashboard. Paste the server token in the connection field; it stays in page memory and is not written to browser storage. Each task offers a read-only record audit. The authenticated `GET /v1/audit/github` endpoint independently reads the configured GitHub branch HEAD and checks successful CI jobs for that exact commit. Configure `ZEDCU_RAZA_GITHUB_REPOSITORY` and `ZEDCU_RAZA_GITHUB_BRANCH` to select the target; optional `ZEDCU_GITHUB_READ_TOKEN` can improve API rate limits and should be stored only as a secret. The monitor runs inside the API process today; it is not yet a separately deployed or scheduled service.
 
 Health endpoints:
 - `GET /health` — process liveness.
@@ -70,7 +70,18 @@ npm run start:worker
 
 The worker claims durable PostgreSQL queue entries, attempts eligible configured routes in priority order, and records the result in a task checkpoint. Retryable failures may move to the next eligible route; if all eligible routes fail or zero cost cannot be established, the task is paused. This is a basic multi-route worker, not yet Sirfaraz orchestration or a complete specialist-agent runtime.
 
-## 4. Submit a task
+## 4. Preview a Sirfaraz plan
+
+The authenticated planning endpoint is deterministic and makes no model calls. It returns a proposed plan with a hard USD $0 ceiling and flags requests that appear to require approval. A plan is not execution approval.
+
+```sh
+curl -X POST "http://localhost:8080/v1/plan" \
+  -H "Authorization: Bearer $ZEDCU_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"request":"Review the worker cancellation changes and run tests."}'
+```
+
+## 5. Submit a task
 
 Use a unique idempotency key for each new task. Example:
 
@@ -98,4 +109,4 @@ The worker's output is stored as a checkpoint in the task record. Never expose t
 - The API uses one bearer token; this is a starter control plane, not a complete multi-user identity system.
 - The worker supports multiple configured OpenAI-compatible routes; native provider protocols need separate adapters.
 - No automated production backups are configured. Complete a tested restore drill before storing important data.
-- Pause/cancel changes are checked after the current model request returns; they do not forcibly abort every in-flight upstream request yet.\n- No cloud deployment or production-readiness claim is implied by local startup instructions.
+- The worker polls durable task state and sends an abort signal when a task is paused/cancelled or state cannot be verified. Actual cancellation still depends on the upstream adapter honoring the signal.\n- No cloud deployment or production-readiness claim is implied by local startup instructions.
