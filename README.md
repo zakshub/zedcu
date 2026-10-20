@@ -29,7 +29,17 @@ The current feature branch has executable API and worker entry points, a basic r
 7. **Honest reporting:** distinguish planned, implemented, tested, deployed, and independently verified.
 8. **No fabricated recovery:** never claim new baseline files recover an earlier unverified OpenCode session.
 
-## Current runtime entry points\n\n- `npm start`: authenticated HTTP task API, backed by PostgreSQL.\n- `npm run start:worker`: one-route worker using the generic OpenAI-compatible adapter and strict free-route metadata gate.\n- `npm run build`: compile TypeScript before starting either process.\n- [Quick-start guide](docs/QUICKSTART.md): configuration, migration, task submission, and limitations.\n\nThese commands do not provision a database or deploy the service. A valid PostgreSQL database and carefully verified free-model configuration are required for end-to-end execution.\n\n## Planned agent structure
+## Current runtime entry points
+
+- `npm start`: authenticated HTTP task API, backed by PostgreSQL.
+- `npm run start:worker`: worker using configured OpenAI-compatible routes and the strict free-route metadata gate.
+- `npm run build`: compile TypeScript before starting either process.
+- Authenticated `GET /v1/audit/github`: read-only Raza check of branch HEAD and required CI job evidence.
+- [Quick-start guide](docs/QUICKSTART.md): configuration, migration, task submission, and limitations.
+
+These commands do not provision a database or deploy the service. A valid PostgreSQL database and carefully verified free-model configuration are required for end-to-end execution.
+
+## Planned agent structure
 
 See [docs/AGENTS.md](docs/AGENTS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/IMPLEMENTATION_SPEC.md](docs/IMPLEMENTATION_SPEC.md), [docs/COST_POLICY.md](docs/COST_POLICY.md), [docs/SECURITY.md](docs/SECURITY.md), [docs/ROADMAP.md](docs/ROADMAP.md), and [docs/DECISIONS.md](docs/DECISIONS.md).
 
