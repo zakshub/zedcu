@@ -21,6 +21,11 @@ const store = new PostgresTaskStore(pool);
 const server = createApiServer({
   store,
   bearerToken: apiToken,
+  razaGitHub: {
+    repository: process.env.ZEDCU_RAZA_GITHUB_REPOSITORY?.trim() || "zakshub/zedcu",
+    branch: process.env.ZEDCU_RAZA_GITHUB_BRANCH?.trim() || "feat/phase-1-runtime-baseline",
+    ...(process.env.ZEDCU_GITHUB_READ_TOKEN ? { token: process.env.ZEDCU_GITHUB_READ_TOKEN } : {})
+  },
   readinessCheck: async () => {
     await pool.query("SELECT 1");
   }
