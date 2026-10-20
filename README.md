@@ -1,6 +1,6 @@
 # ZEDCU — Zero-Budget, Evidence-Driven Command Universe
 
-ZEDCU is being built as a cloud-hosted AI operating system. The feature branch now includes a PostgreSQL-backed task API/queue foundation and a generic OpenAI-compatible model adapter; Sirfaraz orchestration, specialist execution, the independent Raza monitor, hosted deployment, and the mobile dashboard remain unfinished.
+ZEDCU is being built as a cloud-hosted AI operating system. The feature branch now includes a PostgreSQL-backed task API/queue foundation and a generic OpenAI-compatible model adapter; Sirfaraz orchestration, specialist execution, a separately deployed Raza monitor, and production cloud deployment remain unfinished.
 
 > **Hard financial boundary: USD $0 monthly spend.** No purchases, paid model fallback, automatic upgrades, or hidden paid routes. Free quotas are finite. When eligible free routes are exhausted or pricing cannot be verified, pause and notify Zak.
 
