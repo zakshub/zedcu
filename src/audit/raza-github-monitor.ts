@@ -49,8 +49,9 @@ function validRepository(repository: string): boolean {
   return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository);
 }
 function validBranch(branch: string): boolean {
+  const forbidden = [" ", "\\t", "\\n", "~", "^", ":", "?", "*", "[", "]", "\\\\"];
   return branch.length > 0 && branch.length <= 200 && !branch.startsWith("-") &&
-    !branch.includes("..") && !/[\\s~^:?*\[]/.test(branch);
+    !branch.includes("..") && !forbidden.some((character) => branch.includes(character));
 }
 
 /**
