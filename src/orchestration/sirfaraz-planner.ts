@@ -15,7 +15,7 @@ export type SpecialistRole =
 
 export interface SirfarazPlanStep {
   step: number;
-  owner: "Sirfaraz" | SpecialistRole;
+  owner: "Sirfaraz" | "Raza" | SpecialistRole;
   action: string;
   deliverable: string;
 }
@@ -83,7 +83,7 @@ export function createSirfarazPlan(request: string): SirfarazPlan {
       { step: 1, owner: "Sirfaraz", action: "Clarify acceptance criteria, constraints, and stop conditions from the request.", deliverable: "Task brief and measurable acceptance criteria" },
       { step: 2, owner: specialist, action: "Perform the scoped specialist analysis or implementation.", deliverable: "Reviewable artifact or evidence bundle" },
       { step: 3, owner: "Dr Akram", action: "Run relevant tests and check important failure cases.", deliverable: "Test results and unresolved defects" },
-      { step: 4, owner: "Raza" as "Sirfaraz", action: "Independently compare reported progress with repository and CI evidence.", deliverable: "Verification report with proven, failed, and unverified items" },
+      { step: 4, owner: "Raza", action: "Independently compare reported progress with repository and CI evidence.", deliverable: "Verification report with proven, failed, and unverified items" },
       { step: 5, owner: "Sirfaraz", action: "Report results and pause at any approval or zero-cost boundary.", deliverable: "Final evidence-based status report" }
     ],
     approvalRequired: approvalReasons.length > 0,
