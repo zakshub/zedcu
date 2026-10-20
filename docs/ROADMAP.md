@@ -36,8 +36,10 @@ The direction remains: a persistent cloud-hosted AI agent team, commanded throug
 - [ ] Ensure every task has acceptance criteria and expected artifacts.
 
 ## Stage 4 — Independent monitoring and audit
-- [x] Add initial read-only task/event/checkpoint invariant auditor and API endpoint (module-level Raza baseline only).\n- [ ] Build Progress Monitor as a separate read-only service/role with its own execution boundary.
-- [ ] Verify file diffs, commits, test exit codes, and runtime evidence independently (the current Raza module only checks persisted task-record invariants).
+- [x] Add initial read-only task/event/checkpoint invariant auditor and API endpoint (module-level Raza baseline only).\n- [x] Add a read-only GitHub evidence auditor that compares branch HEAD SHA with CI run/job evidence through an authenticated endpoint.
+- [ ] Deploy Progress Monitor as a separate read-only service/role with its own execution boundary and schedule.
+- [x] Verify branch commit SHA and required CI job conclusions independently through the Raza GitHub evidence endpoint.
+- [ ] Expand verification to source diffs, release artifacts, deployment health, and scheduled discrepancy reporting.
 - [ ] Detect mismatch between reported and observed status.
 - [ ] Report discrepancies directly to Zak.
 - [ ] Add append-only task events and notifications.
