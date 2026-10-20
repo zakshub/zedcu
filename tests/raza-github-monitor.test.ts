@@ -70,7 +70,7 @@ describe("Raza independent GitHub evidence auditor", () => {
 
   it("does not accept CI from a different commit", async () => {
     const routes: Record<string, unknown> = structuredClone(successRoutes);
-    const runs = routes["actions/runs?branch=feat/phase-1-runtime-baseline&per_page=100"] as { workflow_runs: Array<Record<string, unknown>> };
+    const runs = routes["actions/runs?branch=feat%2Fphase-1-runtime-baseline&per_page=100"] as { workflow_runs: Array<Record<string, unknown>> };
     runs.workflow_runs[0]!.head_sha = "b".repeat(40);
     const report = await auditGitHubEvidence({
       repository: "zakshub/zedcu",
