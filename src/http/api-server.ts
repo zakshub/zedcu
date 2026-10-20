@@ -6,6 +6,7 @@ import { TaskConflictError } from "../tasks/json-task-store.js";
 import { InvalidTaskTransitionError, type TaskEvent } from "../tasks/task-state.js";
 import { DASHBOARD_CSS, DASHBOARD_HTML, DASHBOARD_JS } from "./dashboard.js";
 import { auditTaskRecord } from "../audit/raza-monitor.js";
+import { auditGitHubEvidence, type RazaGitHubOptions } from "../audit/raza-github-monitor.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const ALLOWED_ACTIONS = new Set<TaskEvent>(["pause", "resume", "cancel", "approval_granted", "approval_denied"]);
@@ -16,6 +17,7 @@ export interface ApiServerOptions {
   bearerToken: string;
   /** Optional async readiness check; never return credentials or raw errors. */
   readinessCheck?: () => Promise<void>;
+  razaGitHub?: RazaGitHubOptions;
 }
 
 function sendText(response: ServerResponse, status: number, contentType: string, body: string): void {
@@ -128,6 +130,16 @@ export function createApiServer(options: ApiServerOptions): Server {
 
       if (request.method === "GET" && url.pathname === "/v1/tasks") {
         send(response, 200, { tasks: await options.store.list() });
+        return;
+      }
+
+      if (request.method === "GET" && url.pathname === "/v1/audit/github") {
+        if (!options.razaGitHub) {
+          send(response, 503, { error: "github_evidence_audit_not_configured" });
+          return;
+        }
+        const report = await auditGitHubEvidence(options.razaGitHub);
+        send(response, report.passed ? 200 : 503, { audit: report });
         return;
       }
 
