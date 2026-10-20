@@ -7,6 +7,7 @@ import { InvalidTaskTransitionError, type TaskEvent } from "../tasks/task-state.
 import { DASHBOARD_CSS, DASHBOARD_HTML, DASHBOARD_JS } from "./dashboard.js";
 import { auditTaskRecord } from "../audit/raza-monitor.js";
 import { auditGitHubEvidence, type RazaGitHubOptions } from "../audit/raza-github-monitor.js";
+import { createSirfarazPlan } from "../orchestration/sirfaraz-planner.js";
 
 const MAX_BODY_BYTES = 64 * 1024;
 const ALLOWED_ACTIONS = new Set<TaskEvent>(["pause", "resume", "cancel", "approval_granted", "approval_denied"]);
@@ -108,6 +109,20 @@ export function createApiServer(options: ApiServerOptions): Server {
       }
       if (!authorized(request, options.bearerToken)) {
         send(response, 401, { error: "unauthorized" });
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/plan") {
+        const body = recordObject(await readJson(request));
+        if (typeof body?.request !== "string") {
+          send(response, 400, { error: "request_must_be_non_empty_text" });
+          return;
+        }
+        try {
+          send(response, 200, { plan: createSirfarazPlan(body.request) });
+        } catch (error) {
+          send(response, 400, { error: error instanceof Error ? error.message : "invalid_planning_request" });
+        }
         return;
       }
 
