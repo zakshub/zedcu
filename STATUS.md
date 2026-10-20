@@ -8,12 +8,11 @@
 
 ## Latest verified code
 
-GitHub Actions run [#362](https://github.com/zakshub/zedcu/actions/runs/39053974534) passed both jobs on code commit `45f9bbfd3498047d8733612e9874d663486bfb57`:
-- 81 unit tests passed.
+Latest GitHub Actions run [#401](https://github.com/zakshub/zedcu/actions/runs/39442224352) passed both jobs on commit `830d188f7dda1f866d169c35a76e74d31ab591b9`:
+- 89 unit tests passed.
 - TypeScript typecheck, build, lint, and high-severity dependency audit passed.
-- PostgreSQL 16 schema/migration checks and five live integration tests passed, including atomic queue reactivation on resume.
-
-Later CI runs passed the worker cancellation change. The new GitHub evidence auditor and API endpoint are now committed on the implementation branch; their CI verification is pending.
+- PostgreSQL 16 schema/migration checks and five live integration tests passed.
+- The active-request cancellation watcher and Raza GitHub evidence auditor/API endpoint are included in the verified branch head.
 
 ## Implemented
 
@@ -30,7 +29,7 @@ Later CI runs passed the worker cancellation change. The new GitHub evidence aud
 ## Latest engineering change in progress
 
 - Added a durable task-state cancellation watcher for active provider requests. GitHub Actions passed typecheck, unit tests, build, lint, and dependency audit for the change; PostgreSQL integration also passed.
-- Added a read-only Raza GitHub evidence auditor and authenticated `GET /v1/audit/github` endpoint. It compares the configured branch HEAD SHA with CI runs for that exact SHA and requires successful `checks` and `postgres-schema` jobs. The endpoint is read-only and fails closed if evidence is missing. CI verification for this addition is pending; this is an auditor module and endpoint, not yet a separately deployed service.
+- Added a read-only Raza GitHub evidence auditor and authenticated `GET /v1/audit/github` endpoint. It compares the configured branch HEAD SHA with CI runs for that exact SHA and requires successful `checks` and `postgres-schema` jobs. The endpoint is read-only and fails closed if evidence is missing. CI run #401 passed for this addition. This is an auditor module and endpoint, not yet a separately deployed service.
 
 ## Not yet implemented or verified
 
