@@ -8,11 +8,11 @@
 
 ## Latest verified code
 
-Latest GitHub Actions run [#401](https://github.com/zakshub/zedcu/actions/runs/39442224352) passed both jobs on commit `830d188f7dda1f866d169c35a76e74d31ab591b9`:
-- 89 unit tests passed.
+GitHub Actions run [#411](https://github.com/zakshub/zedcu/actions/runs/39442579375) passed both jobs on commit `ddfbb2900766fd6028da5762a3cdde3030cfb47f`:
+- 93 unit tests passed.
 - TypeScript typecheck, build, lint, and high-severity dependency audit passed.
 - PostgreSQL 16 schema/migration checks and five live integration tests passed.
-- The active-request cancellation watcher and Raza GitHub evidence auditor/API endpoint are included in the verified branch head.
+- Includes active-request cancellation, Raza GitHub evidence auditing, and the deterministic Sirfaraz plan-preview endpoint.
 
 ## Implemented
 
@@ -20,9 +20,9 @@ Latest GitHub Actions run [#401](https://github.com/zakshub/zedcu/actions/runs/3
 - Provider contracts, free-only route policy, gateway registry, capability/priority routing, bounded fallback, and a generic OpenAI-compatible adapter.
 - Multi-route worker configuration with server-side secrets, per-route evidence metadata, priority order, bounded fallback, and shutdown draining.
 - PostgreSQL TaskStore and durable queue with leases, idempotency, audit events, checkpoints, atomic task + queue submission, and atomic re-queue on resume.
-- Authenticated HTTP task API with health/readiness, idempotent task submission, listing, inspection, and constrained state actions.
+- Authenticated HTTP task API with health/readiness, idempotent task submission, listing, inspection, constrained state actions, and a deterministic zero-cost Sirfaraz planning preview at `POST /v1/plan`.
 - Basic responsive control dashboard served by the API. It supports token-based connection, task submission, history, checkpoint inspection, task actions, and a read-only Raza task-record audit. The token remains in page memory rather than browser storage.
-- Initial read-only Raza audit module and endpoint checks event/checkpoint sequences and consistency with the current task state. This is not yet a separate independent service and does not verify external GitHub/CI evidence.
+- Read-only Raza auditors: persisted task-record invariants and GitHub branch HEAD/CI job evidence via authenticated `GET /v1/audit/github`. The GitHub auditor verifies matching SHA and required job conclusions, but remains in the API process rather than a separately deployed service.
 - PostgreSQL-backed worker entry point and runtime start scripts.
 - Backup/recovery runbook, free-tier database comparison, and runtime quick-start instructions.
 
