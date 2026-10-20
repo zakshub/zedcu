@@ -64,7 +64,7 @@ describe("authenticated task HTTP API", () => {
   it("exposes read-only independent GitHub evidence audit when configured", async () => {
     const sha = "a".repeat(40);
     const routes: Record<string, unknown> = {
-      "git/ref/heads/feat%2Fphase-1-runtime-baseline": { object: { sha } },
+      "git/ref/heads/feat/phase-1-runtime-baseline": { object: { sha } },
       "actions/runs?branch=feat%2Fphase-1-runtime-baseline&per_page=100": {
         workflow_runs: [{
           id: 42, head_sha: sha, status: "completed", conclusion: "success",
