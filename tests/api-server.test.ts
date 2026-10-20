@@ -60,6 +60,51 @@ describe("authenticated task HTTP API", () => {
     expect(body.audit).toMatchObject({ taskId: task.id, passed: true, findings: [] });
   });
 
+
+  it("exposes read-only independent GitHub evidence audit when configured", async () => {
+    const sha = "a".repeat(40);
+    const routes: Record<string, unknown> = {
+      "git/ref/heads/feat%2Fphase-1-runtime-baseline": { object: { sha } },
+      "actions/runs?branch=feat%2Fphase-1-runtime-baseline&per_page=100": {
+        workflow_runs: [{
+          id: 42, head_sha: sha, status: "completed", conclusion: "success",
+          html_url: "https://github.com/zakshub/zedcu/actions/runs/42",
+          event: "push", created_at: "2026-10-20T11:00:00.000Z"
+        }]
+      },
+      "actions/runs/42/jobs?per_page=100": {
+        jobs: [
+          { name: "checks", status: "completed", conclusion: "success" },
+          { name: "postgres-schema", status: "completed", conclusion: "success" }
+        ]
+      }
+    };
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const key = String(input).replace("https://api.github.com/repos/zakshub/zedcu/", "");
+      const body = routes[key];
+      return new Response(JSON.stringify(body ?? {}), {
+        status: body === undefined ? 404 : 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }) as typeof fetch;
+    const { baseUrl } = await startApi({
+      store: new MemoryStore(),
+      bearerToken: token,
+      razaGitHub: {
+        repository: "zakshub/zedcu",
+        branch: "feat/phase-1-runtime-baseline",
+        fetchImpl,
+        now: () => new Date("2026-10-20T12:00:00.000Z")
+      }
+    });
+    const response = await fetch(baseUrl + "/v1/audit/github", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { audit: { auditor: string; passed: boolean; headSha: string } };
+    expect(body.audit).toMatchObject({ auditor: "Raza", passed: true, headSha: sha });
+  });
+
   it("serves the responsive dashboard with a restrictive same-origin content policy", async () => {
     const { baseUrl } = await startApi({ store: new MemoryStore(), bearerToken: token });
     const response = await fetch(baseUrl + "/");
