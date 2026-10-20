@@ -51,7 +51,7 @@ describe("Raza independent GitHub evidence auditor", () => {
   });
 
   it("fails when a required job did not succeed", async () => {
-    const routes = structuredClone(successRoutes);
+    const routes: Record<string, unknown> = structuredClone(successRoutes);
     routes["actions/runs/42/jobs?per_page=100"] = {
       jobs: [
         { name: "checks", status: "completed", conclusion: "success" },
@@ -69,7 +69,7 @@ describe("Raza independent GitHub evidence auditor", () => {
   });
 
   it("does not accept CI from a different commit", async () => {
-    const routes = structuredClone(successRoutes);
+    const routes: Record<string, unknown> = structuredClone(successRoutes);
     const runs = routes["actions/runs?branch=feat/phase-1-runtime-baseline&per_page=100"] as { workflow_runs: Array<Record<string, unknown>> };
     runs.workflow_runs[0]!.head_sha = "b".repeat(40);
     const report = await auditGitHubEvidence({
