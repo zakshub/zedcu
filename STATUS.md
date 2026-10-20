@@ -1,6 +1,6 @@
 # ZEDCU Status
 
-**Updated:** 2026-10-17  
+**Updated:** 2026-10-20  
 **Repository:** `zakshub/zedcu`  
 **Default branch:** `main`  
 **Implementation branch:** `feat/phase-1-runtime-baseline`  
@@ -13,7 +13,7 @@ GitHub Actions run [#362](https://github.com/zakshub/zedcu/actions/runs/39053974
 - TypeScript typecheck, build, lint, and high-severity dependency audit passed.
 - PostgreSQL 16 schema/migration checks and five live integration tests passed, including atomic queue reactivation on resume.
 
-Subsequent commits update documentation only and are being checked separately.
+Later CI runs passed the worker cancellation change. The new GitHub evidence auditor and API endpoint are now committed on the implementation branch; their CI verification is pending.
 
 ## Implemented
 
@@ -29,7 +29,8 @@ Subsequent commits update documentation only and are being checked separately.
 
 ## Latest engineering change in progress
 
-- Added a durable task-state cancellation watcher for active provider requests. The worker now aborts the upstream request when the task is paused/cancelled or when task state cannot be verified, rather than waiting for the model request timeout. New focused tests cover cancellation, normal running state, and database-read failure. CI must pass before this change is considered verified.
+- Added a durable task-state cancellation watcher for active provider requests. GitHub Actions passed typecheck, unit tests, build, lint, and dependency audit for the change; PostgreSQL integration also passed.
+- Added a read-only Raza GitHub evidence auditor and authenticated `GET /v1/audit/github` endpoint. It compares the configured branch HEAD SHA with CI runs for that exact SHA and requires successful `checks` and `postgres-schema` jobs. The endpoint is read-only and fails closed if evidence is missing. CI verification for this addition is pending; this is an auditor module and endpoint, not yet a separately deployed service.
 
 ## Not yet implemented or verified
 
@@ -37,7 +38,7 @@ Subsequent commits update documentation only and are being checked separately.
 - No live model/provider has been configured or called; route free status remains operator-attested, not independently checked against live billing.
 - No scheduled backup or successful production restore drill.
 - Sirfaraz's natural-language command/orchestration layer and all 15 specialist execution roles are not implemented.
-- Raza's separate read-only verification service is not implemented; only the initial read-only task-record auditor exists.
+- Raza is now implemented as a read-only GitHub evidence auditor module and authenticated endpoint, but it is not yet deployed as a separately isolated service or scheduled monitor.
 - No authenticated GitHub execution workflow, notifications, multi-user accounts, or role-based permissions.
 - The current adapter supports OpenAI-compatible chat completions; native-provider protocols need their own adapters.
 - A single bearer token is starter authentication, not a production identity/permission system.
