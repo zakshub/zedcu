@@ -17,7 +17,7 @@ function fakeFetch(routes: Record<string, unknown>, status = 200): typeof fetch 
 }
 
 const successRoutes = {
-  "git/ref/heads/feat%2Fphase-1-runtime-baseline": { object: { sha } },
+  "git/ref/heads/feat/phase-1-runtime-baseline": { object: { sha } },
   "actions/runs?branch=feat%2Fphase-1-runtime-baseline&per_page=100": {
     workflow_runs: [{
       id: 42, head_sha: sha, status: "completed", conclusion: "success",
