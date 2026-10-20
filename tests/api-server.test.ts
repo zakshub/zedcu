@@ -61,6 +61,24 @@ describe("authenticated task HTTP API", () => {
   });
 
 
+
+  it("returns a deterministic Sirfaraz plan without executing or approving the request", async () => {
+    const { baseUrl } = await startApi({ store: new MemoryStore(), bearerToken: token });
+    const response = await fetch(baseUrl + "/v1/plan", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ request: "Deploy the dashboard to production" })
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as { plan: { planner: string; approvalRequired: boolean; status: string; monthlySpendCeilingUsd: number } };
+    expect(body.plan).toMatchObject({
+      planner: "Sirfaraz",
+      approvalRequired: true,
+      status: "planned_not_approved",
+      monthlySpendCeilingUsd: 0
+    });
+  });
+
   it("exposes read-only independent GitHub evidence audit when configured", async () => {
     const sha = "a".repeat(40);
     const routes: Record<string, unknown> = {
