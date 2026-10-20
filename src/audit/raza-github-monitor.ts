@@ -84,7 +84,7 @@ export async function auditGitHubEvidence(options: RazaGitHubOptions): Promise<G
 
   let headSha: string | null = null;
   try {
-    const ref = await request<GitHubRefResponse>(`git/ref/heads/${encodeURIComponent(options.branch)}`);
+    const ref = await request<GitHubRefResponse>(`git/ref/heads/${options.branch.split("/").map(encodeURIComponent).join("/")}`);
     headSha = ref.object?.sha ?? null;
     if (!headSha || !/^[a-f0-9]{40}$/i.test(headSha)) {
       findings.push({ code: "branch_head_missing", severity: "error", message: "GitHub did not return a valid commit SHA for the monitored branch." });
