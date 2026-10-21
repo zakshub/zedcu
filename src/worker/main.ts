@@ -127,14 +127,27 @@ async function processOne(): Promise<boolean> {
     } catch {
       // Preserve the original failure; the queue lease will expire if ack fails.
     }
+    const maxTaskAttempts = positiveInteger("ZEDCU_WORKER_MAX_TASK_ATTEMPTS", 3);
+    const shouldRetry = lease.attempts < maxTaskAttempts;
     try {
-      await queue.acknowledge(lease.taskId, lease.leaseToken);
-    } catch {
-      // Lease expiry/reclaim remains the recovery path.
+      if (shouldRetry) {
+        await queue.release(lease.taskId, lease.leaseToken);
+      } else {
+        await queue.acknowledge(lease.taskId, lease.leaseToken);
+      }
+    } catch (leaseError) {
+      console.error(JSON.stringify({
+        event: "task_lease_recovery_failed",
+        taskId: task.id,
+        error: leaseError instanceof Error ? leaseError.message : "unknown_error"
+      }));
     }
     console.error(JSON.stringify({
       event: "task_failed",
       taskId: task.id,
+      attempt: lease.attempts,
+      maxAttempts: maxTaskAttempts,
+      retryScheduled: shouldRetry,
       error: error instanceof Error ? error.message : "unknown_error"
     }));
     return true;
