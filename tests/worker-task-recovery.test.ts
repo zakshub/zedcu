@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { TaskEvent } from "../src/tasks/task-state.js";
-import { recoverInterruptedTask } from "../src/worker/task-recovery.js";
+import { recoverInterruptedTask, shouldRetryQueueClaim } from "../src/worker/task-recovery.js";
 
 describe("recoverInterruptedTask", () => {
   it.each(["planning", "running"] as const)(
@@ -43,4 +43,22 @@ describe("recoverInterruptedTask", () => {
       expect(apply).not.toHaveBeenCalled();
     }
   );
+});
+
+describe("shouldRetryQueueClaim", () => {
+  it("allows another claim while below the configured limit", () => {
+    expect(shouldRetryQueueClaim(1, 5)).toBe(true);
+    expect(shouldRetryQueueClaim(4, 5)).toBe(true);
+  });
+
+  it("stops retrying at the configured limit", () => {
+    expect(shouldRetryQueueClaim(5, 5)).toBe(false);
+    expect(shouldRetryQueueClaim(6, 5)).toBe(false);
+  });
+
+  it("rejects invalid claim limits", () => {
+    expect(() => shouldRetryQueueClaim(0, 5)).toThrow();
+    expect(() => shouldRetryQueueClaim(1, 0)).toThrow();
+    expect(() => shouldRetryQueueClaim(1.5, 5)).toThrow();
+  });
 });
