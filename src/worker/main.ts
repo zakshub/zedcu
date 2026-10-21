@@ -6,6 +6,7 @@ import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
 import { watchTaskCancellation } from "./task-cancellation.js";
+import { enforceExecutionApprovalGate } from "./execution-approval-gate.js";
 import { recoverInterruptedTask, shouldRetryQueueClaim } from "./task-recovery.js";
 
 function positiveInteger(name: string, fallback: number): number {
@@ -65,8 +66,17 @@ async function processOne(): Promise<boolean> {
 
   let stopCancellationWatch: (() => void) | undefined;
   try {
-    await service.apply(task.id, "start");
-    await service.apply(task.id, "dispatch");
+    const approvalGate = await enforceExecutionApprovalGate(task, service);
+    if (approvalGate.status === "waiting_for_approval") {
+      await queue.acknowledge(lease.taskId, lease.leaseToken);
+      console.info(JSON.stringify({
+        event: "task_waiting_for_approval",
+        taskId: task.id,
+        approvalReasons: approvalGate.plan.approvalReasons
+      }));
+      return true;
+    }
+
     const requestController = new AbortController();
     stopCancellationWatch = watchTaskCancellation(async () => {
       const latest = await store.get(task.id);
