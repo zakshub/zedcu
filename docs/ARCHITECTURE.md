@@ -53,14 +53,18 @@ Evidence-based report + GitHub commits + notifications
 - Use idempotency keys and bounded retries.
 - Recover unfinished tasks after process restart.
 
-### Provider router
-- Separate adapters for OpenRouter, OmniRoute, and any direct provider API approved after verification.
+### Gateway-neutral provider router
+- Keep gateway transport separate from upstream model/provider identity.
+- Support independently switchable adapters for OmniRoute, OpenRouter, direct provider APIs, and compatible self-hosted or hosted gateways.
+- Candidate gateways include LiteLLM, Bifrost, Portkey Gateway, New API, Agent Router / Envoy AI Gateway, Kong AI Gateway, and Cloudflare AI Gateway; each must be evaluated before adoption.
+- OpenCode is optional development tooling, not a required gateway or source of inference quota.
 - Route only to an explicit allowlist of verified free routes.
-- Track attempted provider/model pairs per task to prevent repeating the same failed option.
-- Classify errors and use bounded exponential backoff.
+- Track gateway + upstream provider/model attempts per task to prevent repeating the same failed route.
+- Classify errors and use bounded retries; add cooldowns and capability-aware ranking as the router matures.
 - Enforce zero-spend policy before requests and inspect usage/cost evidence after responses.
 - If cost cannot be confidently established as zero, reject the result and pause.
 - Do not claim multiple routers multiply quota when they share an upstream provider.
+- See [Gateway Strategy](GATEWAY_STRATEGY.md) for the integration contract and enablement checklist.
 
 ### Specialist agents
 - Receive narrow instructions, expected outputs, tool permissions, and acceptance criteria.
