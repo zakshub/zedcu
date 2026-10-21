@@ -31,3 +31,13 @@ export async function recoverInterruptedTask(
   if (task.state !== "queued") return "acknowledge";
   return "continue";
 }
+/** Returns whether another queue claim is permitted under the configured bound. */
+export function shouldRetryQueueClaim(claimAttempt: number, maxQueueClaims: number): boolean {
+  if (!Number.isInteger(claimAttempt) || claimAttempt < 1) {
+    throw new Error("Queue claim attempt must be a positive integer.");
+  }
+  if (!Number.isInteger(maxQueueClaims) || maxQueueClaims < 1) {
+    throw new Error("Maximum queue claims must be a positive integer.");
+  }
+  return claimAttempt < maxQueueClaims;
+}
