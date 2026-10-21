@@ -6,7 +6,7 @@ import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
 import { watchTaskCancellation } from "./task-cancellation.js";
-import { recoverInterruptedTask } from "./task-recovery.js";
+import { recoverInterruptedTask, shouldRetryQueueClaim } from "./task-recovery.js";
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -128,7 +128,7 @@ async function processOne(): Promise<boolean> {
       // Preserve the original failure; the queue lease will expire if ack fails.
     }
     const maxQueueClaims = positiveInteger("ZEDCU_WORKER_MAX_QUEUE_CLAIMS", 5);
-    const shouldRetry = lease.attempts < maxQueueClaims;
+    const shouldRetry = shouldRetryQueueClaim(lease.attempts, maxQueueClaims);
     try {
       if (shouldRetry) {
         await queue.release(lease.taskId, lease.leaseToken);
