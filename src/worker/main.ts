@@ -38,6 +38,36 @@ async function processOne(): Promise<boolean> {
     return true;
   }
 
+  // A previous worker may have died after changing the task state but before
+  // acknowledging its queue lease. Recover interrupted work instead of trying
+  // to apply "start" to a task that is already planning/running.
+  if (task.state === "planning" || task.state === "running" || task.state === "failed") {
+    if (task.state === "planning" || task.state === "running") {
+      await service.apply(task.id, "fail");
+    }
+    await service.apply(task.id, "resume");
+    console.warn(JSON.stringify({
+      event: "interrupted_task_requeued",
+      taskId: task.id,
+      previousState: task.state,
+      queueAttempt: lease.attempts
+    }));
+    // resume() atomically clears the old lease and requeues the task. Let the
+    // next poll claim it afresh, so no stale lease token is acknowledged here.
+    return true;
+  }
+
+  if (task.state !== "queued") {
+    // Paused, awaiting approval, and terminal tasks are not executable.
+    await queue.acknowledge(lease.taskId, lease.leaseToken);
+    console.info(JSON.stringify({
+      event: "non_runnable_task_acknowledged",
+      taskId: task.id,
+      state: task.state
+    }));
+    return true;
+  }
+
   let stopCancellationWatch: (() => void) | undefined;
   try {
     await service.apply(task.id, "start");
