@@ -6,6 +6,7 @@ import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
 import { watchTaskCancellation } from "./task-cancellation.js";
+import { recoverInterruptedTask } from "./task-recovery.js";
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -38,14 +39,9 @@ async function processOne(): Promise<boolean> {
     return true;
   }
 
-  // A previous worker may have died after changing the task state but before
-  // acknowledging its queue lease. Recover interrupted work instead of trying
-  // to apply "start" to a task that is already planning/running.
-  if (task.state === "planning" || task.state === "running" || task.state === "failed") {
-    if (task.state === "planning" || task.state === "running") {
-      await service.apply(task.id, "fail");
-    }
-    await service.apply(task.id, "resume");
+  // Recover interrupted work before applying the normal queued-task flow.
+  const recovery = await recoverInterruptedTask(task, service);
+  if (recovery === "requeued") {
     console.warn(JSON.stringify({
       event: "interrupted_task_requeued",
       taskId: task.id,
@@ -56,8 +52,7 @@ async function processOne(): Promise<boolean> {
     // next poll claim it afresh, so no stale lease token is acknowledged here.
     return true;
   }
-
-  if (task.state !== "queued") {
+  if (recovery === "acknowledge") {
     // Paused, awaiting approval, and terminal tasks are not executable.
     await queue.acknowledge(lease.taskId, lease.leaseToken);
     console.info(JSON.stringify({
