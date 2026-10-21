@@ -6,6 +6,7 @@ import { PostgresTaskStore } from "../tasks/postgres-task-store.js";
 import { TaskService } from "../tasks/task-service.js";
 import { buildWorkerRoutes, parseWorkerRouteConfig } from "./route-config.js";
 import { watchTaskCancellation } from "./task-cancellation.js";
+import { recoverInterruptedTask, shouldRetryQueueClaim } from "./task-recovery.js";
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -35,6 +36,30 @@ async function processOne(): Promise<boolean> {
   const task = await store.get(lease.taskId);
   if (!task) {
     await queue.acknowledge(lease.taskId, lease.leaseToken);
+    return true;
+  }
+
+  // Recover interrupted work before applying the normal queued-task flow.
+  const recovery = await recoverInterruptedTask(task, service);
+  if (recovery === "requeued") {
+    console.warn(JSON.stringify({
+      event: "interrupted_task_requeued",
+      taskId: task.id,
+      previousState: task.state,
+      queueAttempt: lease.attempts
+    }));
+    // resume() atomically clears the old lease and requeues the task. Let the
+    // next poll claim it afresh, so no stale lease token is acknowledged here.
+    return true;
+  }
+  if (recovery === "acknowledge") {
+    // Paused, awaiting approval, and terminal tasks are not executable.
+    await queue.acknowledge(lease.taskId, lease.leaseToken);
+    console.info(JSON.stringify({
+      event: "non_runnable_task_acknowledged",
+      taskId: task.id,
+      state: task.state
+    }));
     return true;
   }
 
@@ -102,14 +127,27 @@ async function processOne(): Promise<boolean> {
     } catch {
       // Preserve the original failure; the queue lease will expire if ack fails.
     }
+    const maxQueueClaims = positiveInteger("ZEDCU_WORKER_MAX_QUEUE_CLAIMS", 5);
+    const shouldRetry = shouldRetryQueueClaim(lease.attempts, maxQueueClaims);
     try {
-      await queue.acknowledge(lease.taskId, lease.leaseToken);
-    } catch {
-      // Lease expiry/reclaim remains the recovery path.
+      if (shouldRetry) {
+        await queue.release(lease.taskId, lease.leaseToken);
+      } else {
+        await queue.acknowledge(lease.taskId, lease.leaseToken);
+      }
+    } catch (leaseError) {
+      console.error(JSON.stringify({
+        event: "task_lease_recovery_failed",
+        taskId: task.id,
+        error: leaseError instanceof Error ? leaseError.message : "unknown_error"
+      }));
     }
     console.error(JSON.stringify({
       event: "task_failed",
       taskId: task.id,
+      queueClaimAttempt: lease.attempts,
+      maxQueueClaims,
+      retryScheduled: shouldRetry,
       error: error instanceof Error ? error.message : "unknown_error"
     }));
     return true;
