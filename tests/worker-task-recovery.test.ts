@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import type { TaskEvent } from "../src/tasks/task-state.js";
 import { recoverInterruptedTask } from "../src/worker/task-recovery.js";
 
 describe("recoverInterruptedTask", () => {
   it.each(["planning", "running"] as const)(
     "fails and requeues interrupted %s work",
     async (state) => {
-      const apply = vi.fn(async () => undefined);
+      const apply = vi.fn(async (_taskId: string, _event: TaskEvent) => undefined);
       const result = await recoverInterruptedTask({ id: "task-1", state }, { apply });
 
       expect(result).toBe("requeued");
