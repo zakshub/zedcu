@@ -27,10 +27,11 @@ Copy `.env.example` to a private local `.env` file or configure the variables in
 
 Set either `DATABASE_URL` or `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD`. For remote PostgreSQL, configure TLS with `PGSSL=true` only when the server presents a valid certificate chain. Configure `ZEDCU_API_TOKEN` with a random secret of at least 32 characters. Set a valid listening port in `PORT` if needed.
 
-Apply the schema once to the target database:
+Apply the schema migrations in numerical order to the target database. Migration 002 adds durable plan-version and approval-decision tables; the runtime is not yet wired to read/write these records, so do not treat the schema alone as an enforced approval gate:
 
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/001_durable_task_queue.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/002_durable_plan_approvals.sql
 ```
 
 Start the API:
